@@ -4,6 +4,7 @@ This project uses shadcn/ui with a 3-tier component hierarchy enforced by rule d
 You are building a dashboard UI. Follow these rules for every file you touch.
 
 @.claude/rules/components.md
+@.claude/rules/component-interfaces.md
 @.claude/rules/tokens.md
 
 ## Always Apply
@@ -14,7 +15,7 @@ You are building a dashboard UI. Follow these rules for every file you touch.
 - **Tokens**: Use CSS custom property tokens for ALL color, spacing, and radius values. Never hardcode hex, rgb, or oklch literals.
   // WHY: Hardcoded values break theming and make dark mode impossible to maintain.
 
-- **No inline styles**: Never use `style={{}}` on any element.
+- **No inline styles**: Never use `style={{}}` on any element. Exception: third-party library API props (e.g., Recharts Tooltip contentStyle) — but values MUST still be CSS custom property tokens.
   // WHY: Inline styles bypass the token system and are impossible to audit automatically.
 
 - **New components**: Before creating a new UI component, propose it. Wait for approval. Create only in `@/components/composed/` with typed props and no className passthrough.

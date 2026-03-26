@@ -75,6 +75,22 @@ CORRECT — token-based:
   bg-background   bg-card   text-foreground   text-muted-foreground
 ```
 
+## Chart & Library Props
+
+Third-party libraries (Recharts, etc.) that accept color/style props MUST use token vars:
+```tsx
+// CORRECT
+stroke="var(--chart-1)"
+fill="var(--chart-2)"
+contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", color: "var(--card-foreground)" }}
+
+// FORBIDDEN
+stroke="#8884d8"
+fill="blue"
+contentStyle={{ backgroundColor: "#fff" }}
+```
+ALWAYS style Tooltip, CartesianGrid, XAxis, YAxis with token vars for consistency across charts.
+
 ## Escape Hatch
 
 If a token does not exist for a legitimate design need (e.g., a one-off data visualization color):
