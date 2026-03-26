@@ -1,8 +1,11 @@
 ---
 paths:
-  - "src/**/*.{tsx,css}"
-  - "app/**/*.{tsx,css}"
-  - "components/**/*.{tsx,css}"
+  - "src/**/*.tsx"
+  - "src/**/*.css"
+  - "app/**/*.tsx"
+  - "app/**/*.css"
+  - "components/**/*.tsx"
+  - "components/**/*.css"
 ---
 
 # Token Rules
@@ -60,18 +63,16 @@ Semantic spacing conventions:
 
 ## Forbidden Patterns
 
-```tsx
-// FORBIDDEN — hardcoded color
-<div style={{ backgroundColor: "#1a1a2e" }}>
-<div className="bg-[#1a1a2e]">
-<div className="bg-zinc-900">
+```
+FORBIDDEN — hardcoded color:
+  style={{ backgroundColor: "#1a1a2e" }}
+  style={{ color: "oklch(0.5 0.2 240)" }}
 
-// FORBIDDEN — raw oklch/rgb
-style={{ color: "oklch(0.5 0.2 240)" }}
+FORBIDDEN — Tailwind color primitive (not a token):
+  bg-zinc-900   bg-gray-100   text-slate-500
 
-// CORRECT
-<div className="bg-background">
-<div className="bg-card">
+CORRECT — token-based:
+  bg-background   bg-card   text-foreground   text-muted-foreground
 ```
 
 ## Escape Hatch
