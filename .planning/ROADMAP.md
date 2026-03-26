@@ -28,7 +28,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. All color, spacing, typography, and radius values are defined as CSS custom properties and referenced by name in component rules — no hex values or magic numbers appear anywhere in the rule files
   3. The CLAUDE.md root file is under 80 lines with a clear pointer to `.claude/rules/` for domain-scoped rules
   4. Every rule in every file has an inline WHY comment explaining its rationale
-  5. Composed component stubs exist for all components referenced in rules, with typed variant props and zero className passthroughs
+  5. Composed component interface contracts exist in rule files for all 12 components, with typed variant props and zero className passthroughs (interface-only per D-05 — no stub implementation files)
 **Plans**: 3 plans
 
 Plans:
