@@ -9,6 +9,7 @@ You are building a dashboard UI. Follow these rules for every file you touch.
 @.claude/rules/forbidden.md
 @.claude/rules/forms.md
 @.claude/rules/naming.md
+@.claude/rules/page-templates.md
 
 ## Always Apply
 
