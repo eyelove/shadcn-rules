@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Define design tokens, 3-tier component hierarchy, Composed component stubs, and rule document format (completed 2026-03-26)
 - [x] **Phase 2: Rule Content** - Author forbidden pattern rules, form structure rules, and naming conventions (completed 2026-03-26)
-- [ ] **Phase 3: Page Templates** - Define all 4 page skeleton templates (list, detail, settings, dashboard)
+- [x] **Phase 3: Page Templates** - Define all 4 page skeleton templates (list, detail, settings, dashboard) (completed 2026-03-26)
 - [ ] **Phase 4: Verification** - Build automated violation detection, generate sample pages, and establish evaluation + refinement loop
 
 ## Phase Details
@@ -66,7 +66,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 03-01-PLAN.md — All 4 page templates: .claude/rules/page-templates.md + CLAUDE.md @import (PAGE-01, PAGE-02, PAGE-03, PAGE-04)
+- [x] 03-01-PLAN.md — All 4 page templates: .claude/rules/page-templates.md + CLAUDE.md @import (PAGE-01, PAGE-02, PAGE-03, PAGE-04)
 
 **UI hint**: yes
 
@@ -91,5 +91,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-03-26 |
 | 2. Rule Content | 3/3 | Complete   | 2026-03-26 |
-| 3. Page Templates | 0/1 | Not started | - |
+| 3. Page Templates | 1/1 | Complete   | 2026-03-26 |
 | 4. Verification | 0/TBD | Not started | - |

@@ -36,10 +36,10 @@
 
 ### Page Templates (PAGE)
 
-- [ ] **PAGE-01**: 목록 페이지 골격 — PageHeader → SearchBar → KpiCardGroup → ChartSection → DataTable
-- [ ] **PAGE-02**: 상세 페이지 골격 — PageHeader(뒤로가기) → TabGroup → (탭별 콘텐츠)
-- [ ] **PAGE-03**: 설정 페이지 골격 — PageHeader → Card > FormFieldSet 반복 > FormActions
-- [ ] **PAGE-04**: 대시보드 페이지 골격 — PageHeader → KpiCardGroup → ChartSection(2열) → DataTable
+- [x] **PAGE-01**: 목록 페이지 골격 — PageHeader → SearchBar → KpiCardGroup → ChartSection → DataTable
+- [x] **PAGE-02**: 상세 페이지 골격 — PageHeader(뒤로가기) → TabGroup → (탭별 콘텐츠)
+- [x] **PAGE-03**: 설정 페이지 골격 — PageHeader → Card > FormFieldSet 반복 > FormActions
+- [x] **PAGE-04**: 대시보드 페이지 골격 — PageHeader → KpiCardGroup → ChartSection(2열) → DataTable
 
 ### Naming Conventions (NAME)
 
@@ -116,10 +116,10 @@
 | NAME-01 | Phase 2 | Complete |
 | NAME-02 | Phase 2 | Complete |
 | NAME-03 | Phase 2 | Complete |
-| PAGE-01 | Phase 3 | Pending |
-| PAGE-02 | Phase 3 | Pending |
-| PAGE-03 | Phase 3 | Pending |
-| PAGE-04 | Phase 3 | Pending |
+| PAGE-01 | Phase 3 | Complete |
+| PAGE-02 | Phase 3 | Complete |
+| PAGE-03 | Phase 3 | Complete |
+| PAGE-04 | Phase 3 | Complete |
 | VERF-01 | Phase 4 | Pending |
 | VERF-02 | Phase 4 | Pending |
 | VERF-03 | Phase 4 | Pending |
