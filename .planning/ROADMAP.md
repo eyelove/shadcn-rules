@@ -84,8 +84,8 @@ Plans:
 
 Plans:
 - [x] 04-01-PLAN.md — Extended checker: scripts/check-rules.sh extended to 25+ checks with form, naming, page template rules (VERF-01)
-- [ ] 04-02-PLAN.md — Sample regeneration: delete old samples, spawn 4 parallel fresh-context subagents to generate new ones (VERF-02, VERF-05)
-- [ ] 04-03-PLAN.md — Process documents: scripts/evaluate.md evaluation checklist + docs/refinement-loop.md process doc (VERF-03, VERF-04)
+- [x] 04-02-PLAN.md — Sample regeneration: delete old samples, spawn 4 parallel fresh-context subagents to generate new ones (VERF-02, VERF-05)
+- [x] 04-03-PLAN.md — Process documents: scripts/evaluate.md evaluation checklist + docs/refinement-loop.md process doc (VERF-03, VERF-04)
 - [ ] 04-04-PLAN.md — Integration checkpoint: run checker against new samples, fill evaluate.md with results, human verification (VERF-01, VERF-02, VERF-03, VERF-04, VERF-05)
 
 ## Progress
