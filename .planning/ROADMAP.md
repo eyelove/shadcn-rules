@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation** - Define design tokens, 3-tier component hierarchy, Composed component stubs, and rule document format (completed 2026-03-26)
 - [x] **Phase 2: Rule Content** - Author forbidden pattern rules, form structure rules, and naming conventions (completed 2026-03-26)
 - [x] **Phase 3: Page Templates** - Define all 4 page skeleton templates (list, detail, settings, dashboard) (completed 2026-03-26)
-- [ ] **Phase 4: Verification** - Build automated violation detection, generate sample pages, and establish evaluation + refinement loop
+- [x] **Phase 4: Verification** - Build automated violation detection, generate sample pages, and establish evaluation + refinement loop (completed 2026-03-26)
 
 ## Phase Details
 
@@ -86,7 +86,7 @@ Plans:
 - [x] 04-01-PLAN.md — Extended checker: scripts/check-rules.sh extended to 25+ checks with form, naming, page template rules (VERF-01)
 - [x] 04-02-PLAN.md — Sample regeneration: delete old samples, spawn 4 parallel fresh-context subagents to generate new ones (VERF-02, VERF-05)
 - [x] 04-03-PLAN.md — Process documents: scripts/evaluate.md evaluation checklist + docs/refinement-loop.md process doc (VERF-03, VERF-04)
-- [ ] 04-04-PLAN.md — Integration checkpoint: run checker against new samples, fill evaluate.md with results, human verification (VERF-01, VERF-02, VERF-03, VERF-04, VERF-05)
+- [x] 04-04-PLAN.md — Integration checkpoint: run checker against new samples, fill evaluate.md with results, human verification (VERF-01, VERF-02, VERF-03, VERF-04, VERF-05)
 
 ## Progress
 
@@ -98,4 +98,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Foundation | 3/3 | Complete   | 2026-03-26 |
 | 2. Rule Content | 3/3 | Complete   | 2026-03-26 |
 | 3. Page Templates | 1/1 | Complete   | 2026-03-26 |
-| 4. Verification | 3/4 | In Progress|  |
+| 4. Verification | 4/4 | Complete   | 2026-03-26 |
