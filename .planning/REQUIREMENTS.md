@@ -14,11 +14,11 @@
 
 ### Forbidden Patterns (FORB)
 
-- [ ] **FORB-01**: inline style 사용 금지 규칙 (`style={{}}` 금지)
-- [ ] **FORB-02**: 하드코딩 컬러 금지 규칙 (hex/rgb 직접 사용 금지, CSS 변수만 허용)
-- [ ] **FORB-03**: div/span 직접 레이아웃 금지 규칙 (Composed 컴포넌트로 대체)
-- [ ] **FORB-04**: shadcn 원본 직접 import 금지 규칙 (래퍼 컴포넌트 사용 강제)
-- [ ] **FORB-05**: FormField 없이 Input 직접 사용 금지 규칙
+- [x] **FORB-01**: inline style 사용 금지 규칙 (`style={{}}` 금지)
+- [x] **FORB-02**: 하드코딩 컬러 금지 규칙 (hex/rgb 직접 사용 금지, CSS 변수만 허용)
+- [x] **FORB-03**: div/span 직접 레이아웃 금지 규칙 (Composed 컴포넌트로 대체)
+- [x] **FORB-04**: shadcn 원본 직접 import 금지 규칙 (래퍼 컴포넌트 사용 강제)
+- [x] **FORB-05**: FormField 없이 Input 직접 사용 금지 규칙
 
 ### Design Tokens (TOKN)
 
@@ -105,11 +105,11 @@
 | RFMT-02 | Phase 1 | Complete |
 | RFMT-03 | Phase 1 | Complete |
 | RFMT-04 | Phase 1 | Complete |
-| FORB-01 | Phase 2 | Pending |
-| FORB-02 | Phase 2 | Pending |
-| FORB-03 | Phase 2 | Pending |
-| FORB-04 | Phase 2 | Pending |
-| FORB-05 | Phase 2 | Pending |
+| FORB-01 | Phase 2 | Complete |
+| FORB-02 | Phase 2 | Complete |
+| FORB-03 | Phase 2 | Complete |
+| FORB-04 | Phase 2 | Complete |
+| FORB-05 | Phase 2 | Complete |
 | FORM-01 | Phase 2 | Pending |
 | FORM-02 | Phase 2 | Pending |
 | FORM-03 | Phase 2 | Pending |

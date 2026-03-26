@@ -47,7 +47,12 @@ Plans:
   2. The complete form structure `Card > FormFieldSet > FormRow/FormField > Input` is documented with a canonical code example, escape hatch, and the exact component slot structure
   3. Given any component, page, or CSS file name, a developer can verify it against the naming rules without ambiguity
   4. Every escape hatch (legitimate exception path) is documented so AI does not treat the prohibition as absolute in edge cases
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [x] 02-01-PLAN.md — Forbidden patterns: .claude/rules/forbidden.md (FORB-01 through FORB-05), update tokens.md and components.md with pointers
+- [ ] 02-02-PLAN.md — Form rules: .claude/rules/forms.md (FORM-01, FORM-02, FORM-03)
+- [ ] 02-03-PLAN.md — Naming conventions + wiring: .claude/rules/naming.md (NAME-01, NAME-02, NAME-03), CLAUDE.md @imports, check-rules.sh extension
 
 ### Phase 3: Page Templates
 **Goal**: All 4 dashboard page types have canonical skeleton templates that define required zones, composition order, and which Composed components fill each zone
@@ -81,6 +86,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-03-26 |
-| 2. Rule Content | 0/TBD | Not started | - |
+| 2. Rule Content | 0/3 | Not started | - |
 | 3. Page Templates | 0/TBD | Not started | - |
 | 4. Verification | 0/TBD | Not started | - |
