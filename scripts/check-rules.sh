@@ -122,6 +122,60 @@ else
 fi
 
 echo ""
+echo "--- FORM STRUCTURE ---"
+
+# FORM-02: Reversed FormActions order — Submit before Cancel (Cancel=outline must come first)
+check "No reversed FormActions order (Submit before Cancel)" 'type="submit">[^<]*</ActionButton>[[:space:]]*<ActionButton variant="outline"' "$TARGET"
+
+# FORM-03: No bare <label> tags — use FormField label= prop
+check "No bare <label> tags (use FormField label= prop)" '<label ' "$TARGET"
+
+# FORM-03: No inline style on <form> element
+check "No raw <form> with inline style" '<form[^>]*style=' "$TARGET"
+
+# FORM-02: No FormActions inside FormFieldSet (FormActions must be sibling of FormFieldSet)
+check "No FormActions inside FormFieldSet" 'FormFieldSet[^<]*>[[:space:]]*<FormActions' "$TARGET"
+
+# FORM-01: No raw <input> tags used in forms (must use FormField > Input)
+check "No raw <input> in form (use FormField > Input)" '<input ' "$TARGET"
+
+echo ""
+echo "--- NAMING CONVENTIONS ---"
+
+# NAME-02: No direct file imports bypassing barrel export
+check "No direct Composed file imports (use barrel @/components/composed)" "from ['\"]@/components/composed/[A-Z]" "$TARGET"
+
+# NAME-02: No UI/Base prefix anti-patterns on component names
+check "No UIButton/BaseCard/UICard/UIInput/BaseInput anti-patterns" '\(UIButton\|UICard\|BaseCard\|UIInput\|BaseInput\|UITable\)' "$TARGET"
+
+# NAME-03: No CSS custom property definitions inside TSX files (define in globals.css/tokens only)
+check "No CSS custom property definitions inside TSX (use tokens/globals.css)" '--[a-z][a-z-]*:[[:space:]]*[^;]*;' "$TARGET"
+
+# FORB-01 extension: No var() inside className (tokens as Tailwind classes, not CSS vars)
+check "No var(--) inside className attribute" 'className=[^"]*var(--' "$TARGET"
+
+echo ""
+echo "--- PAGE TEMPLATE STRUCTURE ---"
+
+# PAGE-02: No TabGroup on any page (forbidden — flat KPI→Chart→Table structure required)
+check "No TabGroup (forbidden — use flat KPI→Chart→Table structure)" '<TabGroup' "$TARGET"
+
+# PAGE-04: No ChartSection cols=1 on dashboard (dashboard requires cols=2)
+check "No ChartSection cols=1 (dashboard requires cols=2)" 'ChartSection cols={1}' "$TARGET"
+
+# PAGE-04/PAGE-02: No ChartSection without explicit cols prop
+check "No <ChartSection> tag without cols prop (cols required)" '<ChartSection>' "$TARGET"
+
+# PAGE-01: No KpiCardGroup on list pages (list pages show table only)
+check "No KpiCardGroup without DataTable on same page (list page must not have KpiCardGroup)" 'KpiCardGroup' "$TARGET"
+
+# FORB-03 extension: No raw <span> used as flex layout container
+check "No raw <span> as flex layout container" '<span className="flex' "$TARGET"
+
+# PAGE-02/03: No console.log in page files
+check "No console.log in page files" 'console\.log(' "$TARGET"
+
+echo ""
 echo "======================================"
 echo -e " Results: ${GREEN}${PASSED} passed${NC}, ${RED}${VIOLATIONS} failed${NC} / ${CHECKS} checks"
 echo "======================================"
