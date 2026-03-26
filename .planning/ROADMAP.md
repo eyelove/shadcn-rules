@@ -51,7 +51,7 @@ Plans:
 
 Plans:
 - [x] 02-01-PLAN.md — Forbidden patterns: .claude/rules/forbidden.md (FORB-01 through FORB-05), update tokens.md and components.md with pointers
-- [ ] 02-02-PLAN.md — Form rules: .claude/rules/forms.md (FORM-01, FORM-02, FORM-03)
+- [x] 02-02-PLAN.md — Form rules: .claude/rules/forms.md (FORM-01, FORM-02, FORM-03)
 - [ ] 02-03-PLAN.md — Naming conventions + wiring: .claude/rules/naming.md (NAME-01, NAME-02, NAME-03), CLAUDE.md @imports, check-rules.sh extension
 
 ### Phase 3: Page Templates

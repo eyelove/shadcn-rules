@@ -30,9 +30,9 @@
 
 ### Form Rules (FORM)
 
-- [ ] **FORM-01**: 폼 구조 강제 규칙 — Card > FormFieldSet > FormRow/FormField > Input
-- [ ] **FORM-02**: FormActions 위치 및 구성 규칙 (취소=outline, 저장=primary)
-- [ ] **FORM-03**: 폼 금지 패턴 예시 (div 직접 레이아웃, Input 직접 사용, inline style 간격)
+- [x] **FORM-01**: 폼 구조 강제 규칙 — Card > FormFieldSet > FormRow/FormField > Input
+- [x] **FORM-02**: FormActions 위치 및 구성 규칙 (취소=outline, 저장=primary)
+- [x] **FORM-03**: 폼 금지 패턴 예시 (div 직접 레이아웃, Input 직접 사용, inline style 간격)
 
 ### Page Templates (PAGE)
 
@@ -110,9 +110,9 @@
 | FORB-03 | Phase 2 | Complete |
 | FORB-04 | Phase 2 | Complete |
 | FORB-05 | Phase 2 | Complete |
-| FORM-01 | Phase 2 | Pending |
-| FORM-02 | Phase 2 | Pending |
-| FORM-03 | Phase 2 | Pending |
+| FORM-01 | Phase 2 | Complete |
+| FORM-02 | Phase 2 | Complete |
+| FORM-03 | Phase 2 | Complete |
 | NAME-01 | Phase 2 | Pending |
 | NAME-02 | Phase 2 | Pending |
 | NAME-03 | Phase 2 | Pending |
