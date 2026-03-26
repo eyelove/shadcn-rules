@@ -93,6 +93,15 @@ check "No raw <button " '<button ' "$TARGET"
 # 8. Tailwind fixed radius (should use token)
 check "No Tailwind fixed rounded (use token)" 'rounded-\(md\|lg\|xl\|2xl\|full\)' "$TARGET"
 
+# 14. FORB-05 — Standalone Textarea outside FormField
+check "No standalone Textarea (use FormField > Textarea)" '<Textarea[^/]*name=' "$TARGET"
+
+# 15. FORB-05 — Standalone Checkbox outside FormField
+check "No standalone Checkbox (use FormField > Checkbox)" '<Checkbox[^/]*name=' "$TARGET"
+
+# 16. Tailwind fixed rounded-sm (should use token)
+check "No Tailwind fixed rounded-sm (use token)" 'rounded-sm' "$TARGET"
+
 echo ""
 echo "--- REQUIRED PATTERNS ---"
 

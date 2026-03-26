@@ -6,6 +6,9 @@ You are building a dashboard UI. Follow these rules for every file you touch.
 @.claude/rules/components.md
 @.claude/rules/component-interfaces.md
 @.claude/rules/tokens.md
+@.claude/rules/forbidden.md
+@.claude/rules/forms.md
+@.claude/rules/naming.md
 
 ## Always Apply
 
