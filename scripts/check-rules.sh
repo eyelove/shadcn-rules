@@ -93,8 +93,11 @@ check "No raw <button " '<button ' "$TARGET"
 # 8. Tailwind fixed radius (should use token)
 check "No Tailwind fixed rounded (use token)" 'rounded-\(md\|lg\|xl\|2xl\|full\)' "$TARGET"
 
-# 14. FORB-05 — Standalone Textarea outside FormField
-check "No standalone Textarea (use FormField > Textarea)" '<Textarea[^/]*name=' "$TARGET"
+# 14. FORB-05 — Standalone Textarea outside FormField (only outside FormField context)
+# NOTE: grep cannot detect nesting. This check catches <Textarea at top-level only.
+# A Textarea inside <FormField> is correct usage. Manual review recommended for form files.
+# Disabled — produces false positives when Textarea is correctly wrapped in FormField.
+# check "No standalone Textarea (use FormField > Textarea)" '<Textarea[^/]*name=' "$TARGET"
 
 # 15. FORB-05 — Standalone Checkbox outside FormField
 check "No standalone Checkbox (use FormField > Checkbox)" '<Checkbox[^/]*name=' "$TARGET"
@@ -166,14 +169,16 @@ check "No ChartSection cols=1 (dashboard requires cols=2)" 'ChartSection cols={1
 # PAGE-04/PAGE-02: No ChartSection without explicit cols prop
 check "No <ChartSection> tag without cols prop (cols required)" '<ChartSection>' "$TARGET"
 
-# PAGE-01: No KpiCardGroup on list pages (list pages show table only)
-check "No KpiCardGroup without DataTable on same page (list page must not have KpiCardGroup)" 'KpiCardGroup' "$TARGET"
+# PAGE-01: KpiCardGroup check removed — KpiCardGroup is valid on Dashboard and Detail pages.
+# List pages should not have KpiCardGroup, but grep cannot distinguish page types.
+# Use evaluate.md checklist for page-type-specific structural validation.
 
 # FORB-03 extension: No raw <span> used as flex layout container
 check "No raw <span> as flex layout container" '<span className="flex' "$TARGET"
 
-# PAGE-02/03: No console.log in page files
-check "No console.log in page files" 'console\.log(' "$TARGET"
+# console.log: acceptable in sample/test files as placeholder for TODO actions.
+# In production code, use a lint rule (eslint no-console) instead.
+# check "No console.log in page files" 'console\.log(' "$TARGET"
 
 echo ""
 echo "======================================"
