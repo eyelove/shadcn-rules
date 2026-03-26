@@ -50,7 +50,7 @@
 ### Rule Format (RFMT)
 
 - [x] **RFMT-01**: 규칙 파일별 토큰 예산 가이드 (~120줄/1,500토큰 이내)
-- [ ] **RFMT-02**: 모듈화 전략 — CLAUDE.md(루트) + .claude/rules/*.md(경로별 스코프)
+- [x] **RFMT-02**: 모듈화 전략 — CLAUDE.md(루트) + .claude/rules/*.md(경로별 스코프)
 - [x] **RFMT-03**: 모든 핵심 규칙에 "WHY" 근거 주석 포함
 - [x] **RFMT-04**: 합법적 예외 경로 문서화 (escape hatch)
 
@@ -102,7 +102,7 @@
 | TOKN-04 | Phase 1 | Complete |
 | TOKN-05 | Phase 1 | Complete |
 | RFMT-01 | Phase 1 | Complete |
-| RFMT-02 | Phase 1 | Pending |
+| RFMT-02 | Phase 1 | Complete |
 | RFMT-03 | Phase 1 | Complete |
 | RFMT-04 | Phase 1 | Complete |
 | FORB-01 | Phase 2 | Pending |
