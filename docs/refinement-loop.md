@@ -1,0 +1,144 @@
+# Rule Refinement Loop
+
+This document describes the repeatable process for improving the rule system based on evaluation findings.
+
+## The Cycle
+
+```
+Rules (CLAUDE.md + .claude/rules/*.md)
+    │
+    ▼
+[1] Generate — Fresh-context agent reads rules, produces sample pages
+    │
+    ▼
+[2] Check — Run check-rules.sh against samples (automated)
+    │
+    ▼
+[3] Evaluate — Human reviews samples with scripts/evaluate.md (manual)
+    │
+    ▼
+[4] Diagnose — Identify root cause: ambiguous rule, missing rule, or AI inference error?
+    │
+    ▼
+[5] Update — Edit the relevant .claude/rules/*.md file
+    │
+    ▼
+[6] Regenerate — Delete the failing sample, spawn a fresh-context agent to regenerate it
+    │
+    ▼
+Back to [2]
+```
+
+## Step-by-Step
+
+### Step 1: Generate
+- Delete existing samples: `rm tests/samples/*.tsx`
+- Spawn 4 parallel fresh-context subagents (one per page type)
+- Each agent reads ONLY the 8 rule files (CLAUDE.md imports all)
+- Each agent writes one file to tests/samples/
+- **NEVER** generate samples in the same context that will evaluate them (VERF-05)
+
+### Step 2: Check (Automated)
+```bash
+bash scripts/check-rules.sh tests/samples/
+```
+- Exit code 0 = no mechanical violations
+- Exit code N = N violations (see FAIL lines in output)
+- Fix mechanical violations first — they are definitive
+
+### Step 3: Evaluate (Human)
+- Open `scripts/evaluate.md`
+- For each sample page, check each rule row against the actual file
+- Mark Pass/Fail in the Actual and Pass/Fail columns
+- Fill in the Summary table
+- A sample fails if it has ANY critical violation (structural rule broken)
+
+### Step 4: Diagnose
+Classify each violation:
+
+| Violation Type | Symptom | Root Cause |
+|----------------|---------|------------|
+| Missing rule | AI invented a pattern not in any rule file | Rule gap — no file forbids or requires this |
+| Ambiguous rule | AI chose a valid-but-wrong interpretation | Rule wording unclear — tighten the constraint |
+| Conflicting rules | Two rule files give contradictory guidance | Consolidation needed — pick one canonical rule |
+| AI inference | AI ignored a clear rule | Rule placement — move rule to more prominent position in file |
+
+### Step 5: Update Rules
+
+**Rule file budget:** Each .claude/rules/*.md file must stay under ~120 lines / ~1,500 tokens (RFMT-01).
+
+Before editing:
+1. Read the rule file to understand current content
+2. Identify which rule ID is affected (e.g., FORB-03, PAGE-04)
+3. Edit the specific rule — do NOT rewrite the whole file
+
+Common edits:
+- Tighten a rule: Add a specific FORBIDDEN example that matches the violation
+- Add a new rule: See "When to Add a Rule" below
+- Add cross-reference: Link the rule to the relevant file where more detail lives
+
+After editing, check line count: `wc -l .claude/rules/<file>.md`
+
+### Step 6: Regenerate
+- Delete ONLY the failing sample (not all 4)
+- Spawn a fresh-context agent with the same subagent prompt used in Plan 02
+- Verify the regenerated sample passes check-rules.sh and evaluate.md for that page type
+
+---
+
+## When to Add a New Rule
+
+Add a rule when ALL of these are true:
+1. **Observable pattern:** The violation appears in at least 2 separate generated samples OR appears repeatedly for the same page type
+2. **Not covered:** No existing rule ID explicitly forbids or requires this pattern
+3. **Mechanical check possible:** The rule can be verified by grep or by reading the file without executing it
+4. **Stable:** The required behavior is unlikely to change as the project evolves
+
+**Do NOT add a rule for:**
+- One-off AI errors that were likely random (appeared once, not in second sample)
+- Patterns already covered by an existing rule that AI simply ignored (fix rule prominence instead)
+- Personal preference — only structural consistency violations qualify
+
+**Process to add:**
+1. Determine which rule file the new rule belongs to (forbidden.md, forms.md, etc.)
+2. Assign the next available rule ID (e.g., FORB-06)
+3. Write the rule with FORBIDDEN example, CORRECT example, and WHY comment
+4. Update REQUIREMENTS.md with the new ID
+5. Regenerate the failing sample to confirm the new rule fixes the violation
+
+## When to Remove a Rule
+
+Remove a rule when ALL of these are true:
+1. **Never violated:** The rule has never been triggered in 3+ evaluation cycles
+2. **Redundant:** Another rule already covers the same prohibition
+3. **False positives:** The check-rules.sh pattern flags correct code (grep heuristic is wrong)
+
+**Process to remove:**
+1. Search check-rules.sh for the corresponding grep check and remove it
+2. Remove or merge the rule text in the relevant .claude/rules/*.md file
+3. Update REQUIREMENTS.md to mark the rule as deprecated
+4. Document the removal reason in a comment
+
+---
+
+## Evaluation Cadence
+
+| Trigger | Action |
+|---------|--------|
+| New rule file added or modified | Regenerate all 4 samples, full evaluation |
+| Single rule clarified (wording only) | Regenerate only the sample(s) that previously violated that rule |
+| Structural change (new page type, new component) | Add new checklist section to evaluate.md, generate new sample |
+| No violations in 3 consecutive cycles | Rule system is stable — no further action required |
+
+---
+
+## Files Quick Reference
+
+| File | Purpose |
+|------|---------|
+| CLAUDE.md | Rule hub — imports all 8 rule files |
+| .claude/rules/*.md | Domain-scoped rule content |
+| scripts/check-rules.sh | Automated grep-based violation checker |
+| scripts/evaluate.md | Human evaluation checklist (fill in per cycle) |
+| tests/samples/*.tsx | Generated sample pages for evaluation |
+| docs/refinement-loop.md | This document |
