@@ -63,17 +63,7 @@ Semantic spacing conventions:
 
 ## Forbidden Patterns
 
-```
-FORBIDDEN — hardcoded color:
-  style={{ backgroundColor: "#1a1a2e" }}
-  style={{ color: "oklch(0.5 0.2 240)" }}
-
-FORBIDDEN — Tailwind color primitive (not a token):
-  bg-zinc-900   bg-gray-100   text-slate-500
-
-CORRECT — token-based:
-  bg-background   bg-card   text-foreground   text-muted-foreground
-```
+For all forbidden color patterns with FORBIDDEN/CORRECT examples, see: @.claude/rules/forbidden.md (FORB-02)
 
 ## Chart & Library Props
 

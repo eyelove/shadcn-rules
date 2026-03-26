@@ -97,5 +97,7 @@ Need a UI element not covered above?
 3. After approval, create it in `@/components/composed/` with a typed props interface
 4. NEVER add className to the new component's props
 
+For FORBIDDEN/CORRECT examples of all 5 forbidden patterns, see: @.claude/rules/forbidden.md
+
 **For full component interface contracts (Props types and usage examples), see:**
 @.claude/rules/component-interfaces.md
