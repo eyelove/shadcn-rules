@@ -59,11 +59,15 @@ Plans:
 **Depends on**: Phase 2
 **Requirements**: PAGE-01, PAGE-02, PAGE-03, PAGE-04
 **Success Criteria** (what must be TRUE):
-  1. Given the instruction "build a list page," AI produces a page with exactly PageHeader → SearchBar → KpiCardGroup → ChartSection → DataTable — no improvised structure
-  2. Given the instruction "build a settings page," AI produces a page with exactly PageHeader → Card > FormFieldSet repeated → FormActions — with cancel=outline and save=primary
-  3. Given the instruction "build a detail page," AI produces a page with PageHeader (with back navigation) → TabGroup → per-tab content — not a flat single-column layout
-  4. Given the instruction "build a dashboard overview," AI produces a page with PageHeader → KpiCardGroup → ChartSection (2-column) → DataTable
-**Plans**: TBD
+  1. Given the instruction "build a list page," AI produces a page with exactly PageLayout → PageHeader → SearchBar → DataTable — no improvised structure
+  2. Given the instruction "build a form/settings page," AI produces a page with exactly PageLayout → PageHeader(backHref) → form → FormFieldSet(s) → FormActions — with cancel=outline and save=default
+  3. Given the instruction "build a detail page," AI produces a page with PageLayout → PageHeader(backHref, action=StatusBadge) → KpiCardGroup → ChartSection → DataTable — flat structure, not TabGroup
+  4. Given the instruction "build a dashboard overview," AI produces a page with PageLayout → PageHeader → KpiCardGroup → ChartSection(cols=2) → DataTable
+**Plans**: 1 plan
+
+Plans:
+- [ ] 03-01-PLAN.md — All 4 page templates: .claude/rules/page-templates.md + CLAUDE.md @import (PAGE-01, PAGE-02, PAGE-03, PAGE-04)
+
 **UI hint**: yes
 
 ### Phase 4: Verification
@@ -87,5 +91,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-03-26 |
 | 2. Rule Content | 3/3 | Complete   | 2026-03-26 |
-| 3. Page Templates | 0/TBD | Not started | - |
+| 3. Page Templates | 0/1 | Not started | - |
 | 4. Verification | 0/TBD | Not started | - |
