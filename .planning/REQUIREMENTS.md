@@ -22,11 +22,11 @@
 
 ### Design Tokens (TOKN)
 
-- [ ] **TOKN-01**: 색상 체계 토큰 규칙 (Background, Text, Border, Brand, Chart 카테고리)
-- [ ] **TOKN-02**: 타이포그래피 토큰 규칙 (font-family, size 체계, weight 용도별)
-- [ ] **TOKN-03**: 간격 토큰 규칙 (컴포넌트 내부 padding, 컴포넌트 간 gap, 섹션 간 gap)
-- [ ] **TOKN-04**: 기타 토큰 규칙 (border-radius, shadow, transition)
-- [ ] **TOKN-05**: 토큰은 짧고 명확하게 — 다단계 체인 금지, CSS 변수 직접 참조
+- [x] **TOKN-01**: 색상 체계 토큰 규칙 (Background, Text, Border, Brand, Chart 카테고리)
+- [x] **TOKN-02**: 타이포그래피 토큰 규칙 (font-family, size 체계, weight 용도별)
+- [x] **TOKN-03**: 간격 토큰 규칙 (컴포넌트 내부 padding, 컴포넌트 간 gap, 섹션 간 gap)
+- [x] **TOKN-04**: 기타 토큰 규칙 (border-radius, shadow, transition)
+- [x] **TOKN-05**: 토큰은 짧고 명확하게 — 다단계 체인 금지, CSS 변수 직접 참조
 
 ### Form Rules (FORM)
 
@@ -49,10 +49,10 @@
 
 ### Rule Format (RFMT)
 
-- [ ] **RFMT-01**: 규칙 파일별 토큰 예산 가이드 (~120줄/1,500토큰 이내)
+- [x] **RFMT-01**: 규칙 파일별 토큰 예산 가이드 (~120줄/1,500토큰 이내)
 - [ ] **RFMT-02**: 모듈화 전략 — CLAUDE.md(루트) + .claude/rules/*.md(경로별 스코프)
-- [ ] **RFMT-03**: 모든 핵심 규칙에 "WHY" 근거 주석 포함
-- [ ] **RFMT-04**: 합법적 예외 경로 문서화 (escape hatch)
+- [x] **RFMT-03**: 모든 핵심 규칙에 "WHY" 근거 주석 포함
+- [x] **RFMT-04**: 합법적 예외 경로 문서화 (escape hatch)
 
 ### Verification (VERF)
 
@@ -96,15 +96,15 @@
 | COMP-02 | Phase 1 | Pending |
 | COMP-03 | Phase 1 | Pending |
 | COMP-04 | Phase 1 | Pending |
-| TOKN-01 | Phase 1 | Pending |
-| TOKN-02 | Phase 1 | Pending |
-| TOKN-03 | Phase 1 | Pending |
-| TOKN-04 | Phase 1 | Pending |
-| TOKN-05 | Phase 1 | Pending |
-| RFMT-01 | Phase 1 | Pending |
+| TOKN-01 | Phase 1 | Complete |
+| TOKN-02 | Phase 1 | Complete |
+| TOKN-03 | Phase 1 | Complete |
+| TOKN-04 | Phase 1 | Complete |
+| TOKN-05 | Phase 1 | Complete |
+| RFMT-01 | Phase 1 | Complete |
 | RFMT-02 | Phase 1 | Pending |
-| RFMT-03 | Phase 1 | Pending |
-| RFMT-04 | Phase 1 | Pending |
+| RFMT-03 | Phase 1 | Complete |
+| RFMT-04 | Phase 1 | Complete |
 | FORB-01 | Phase 2 | Pending |
 | FORB-02 | Phase 2 | Pending |
 | FORB-03 | Phase 2 | Pending |

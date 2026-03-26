@@ -32,7 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Token system: tokens/globals.css + .claude/rules/tokens.md (TOKN-01 through TOKN-05, RFMT-01, RFMT-03, RFMT-04)
+- [x] 01-01-PLAN.md — Token system: tokens/globals.css + .claude/rules/tokens.md (TOKN-01 through TOKN-05, RFMT-01, RFMT-03, RFMT-04)
 - [ ] 01-02-PLAN.md — Component contracts: .claude/rules/components.md with all 12 Composed interfaces (COMP-01 through COMP-04, RFMT-01, RFMT-03, RFMT-04)
 - [ ] 01-03-PLAN.md — Root rule file: CLAUDE.md at project root, ties the system together (RFMT-02)
 
