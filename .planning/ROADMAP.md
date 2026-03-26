@@ -75,12 +75,18 @@ Plans:
 **Depends on**: Phase 3
 **Requirements**: VERF-01, VERF-02, VERF-03, VERF-04, VERF-05
 **Success Criteria** (what must be TRUE):
-  1. Running `check.sh` against a file with known violations (inline style, hardcoded hex, raw div layout) flags each violation in under 30 seconds
+  1. Running `check-rules.sh` against a file with known violations (inline style, hardcoded hex, raw div layout) flags each violation in under 30 seconds
   2. A sample page exists for each of the 4 page types (list, detail, settings, dashboard overview), generated in a fresh AI context using only the rule files
   3. Each sample page passes the structured evaluation checklist with zero critical violations (rule → expected output → actual output → verdict)
   4. The fresh-context review protocol is documented and followed — no sample is evaluated in the same context window it was generated in
   5. The refinement loop process is documented so rule updates from evaluation findings can be applied systematically
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [x] 04-01-PLAN.md — Extended checker: scripts/check-rules.sh extended to 25+ checks with form, naming, page template rules (VERF-01)
+- [ ] 04-02-PLAN.md — Sample regeneration: delete old samples, spawn 4 parallel fresh-context subagents to generate new ones (VERF-02, VERF-05)
+- [ ] 04-03-PLAN.md — Process documents: scripts/evaluate.md evaluation checklist + docs/refinement-loop.md process doc (VERF-03, VERF-04)
+- [ ] 04-04-PLAN.md — Integration checkpoint: run checker against new samples, fill evaluate.md with results, human verification (VERF-01, VERF-02, VERF-03, VERF-04, VERF-05)
 
 ## Progress
 
@@ -92,4 +98,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Foundation | 3/3 | Complete   | 2026-03-26 |
 | 2. Rule Content | 3/3 | Complete   | 2026-03-26 |
 | 3. Page Templates | 1/1 | Complete   | 2026-03-26 |
-| 4. Verification | 0/TBD | Not started | - |
+| 4. Verification | 1/4 | In Progress|  |

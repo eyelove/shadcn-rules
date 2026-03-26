@@ -56,7 +56,7 @@
 
 ### Verification (VERF)
 
-- [ ] **VERF-01**: grep 기반 자동 위반 감지 스크립트 (check.sh)
+- [x] **VERF-01**: grep 기반 자동 위반 감지 스크립트 (check.sh)
 - [ ] **VERF-02**: 페이지 타입별 샘플 페이지 생성 (목록/상세/설정/대시보드 각 1개)
 - [ ] **VERF-03**: 구조화된 평가 체크리스트 (규칙 → 기대 결과 → 실제 결과 → 판정)
 - [ ] **VERF-04**: 반복 개선 루프 프로세스 문서화 (규칙 → 생성 → 평가 → 수정 사이클)
@@ -120,7 +120,7 @@
 | PAGE-02 | Phase 3 | Complete |
 | PAGE-03 | Phase 3 | Complete |
 | PAGE-04 | Phase 3 | Complete |
-| VERF-01 | Phase 4 | Pending |
+| VERF-01 | Phase 4 | Complete |
 | VERF-02 | Phase 4 | Pending |
 | VERF-03 | Phase 4 | Pending |
 | VERF-04 | Phase 4 | Pending |
