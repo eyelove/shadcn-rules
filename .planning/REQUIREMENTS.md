@@ -92,45 +92,45 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| COMP-01 | - | Pending |
-| COMP-02 | - | Pending |
-| COMP-03 | - | Pending |
-| COMP-04 | - | Pending |
-| FORB-01 | - | Pending |
-| FORB-02 | - | Pending |
-| FORB-03 | - | Pending |
-| FORB-04 | - | Pending |
-| FORB-05 | - | Pending |
-| TOKN-01 | - | Pending |
-| TOKN-02 | - | Pending |
-| TOKN-03 | - | Pending |
-| TOKN-04 | - | Pending |
-| TOKN-05 | - | Pending |
-| FORM-01 | - | Pending |
-| FORM-02 | - | Pending |
-| FORM-03 | - | Pending |
-| PAGE-01 | - | Pending |
-| PAGE-02 | - | Pending |
-| PAGE-03 | - | Pending |
-| PAGE-04 | - | Pending |
-| NAME-01 | - | Pending |
-| NAME-02 | - | Pending |
-| NAME-03 | - | Pending |
-| RFMT-01 | - | Pending |
-| RFMT-02 | - | Pending |
-| RFMT-03 | - | Pending |
-| RFMT-04 | - | Pending |
-| VERF-01 | - | Pending |
-| VERF-02 | - | Pending |
-| VERF-03 | - | Pending |
-| VERF-04 | - | Pending |
-| VERF-05 | - | Pending |
+| COMP-01 | Phase 1 | Pending |
+| COMP-02 | Phase 1 | Pending |
+| COMP-03 | Phase 1 | Pending |
+| COMP-04 | Phase 1 | Pending |
+| TOKN-01 | Phase 1 | Pending |
+| TOKN-02 | Phase 1 | Pending |
+| TOKN-03 | Phase 1 | Pending |
+| TOKN-04 | Phase 1 | Pending |
+| TOKN-05 | Phase 1 | Pending |
+| RFMT-01 | Phase 1 | Pending |
+| RFMT-02 | Phase 1 | Pending |
+| RFMT-03 | Phase 1 | Pending |
+| RFMT-04 | Phase 1 | Pending |
+| FORB-01 | Phase 2 | Pending |
+| FORB-02 | Phase 2 | Pending |
+| FORB-03 | Phase 2 | Pending |
+| FORB-04 | Phase 2 | Pending |
+| FORB-05 | Phase 2 | Pending |
+| FORM-01 | Phase 2 | Pending |
+| FORM-02 | Phase 2 | Pending |
+| FORM-03 | Phase 2 | Pending |
+| NAME-01 | Phase 2 | Pending |
+| NAME-02 | Phase 2 | Pending |
+| NAME-03 | Phase 2 | Pending |
+| PAGE-01 | Phase 3 | Pending |
+| PAGE-02 | Phase 3 | Pending |
+| PAGE-03 | Phase 3 | Pending |
+| PAGE-04 | Phase 3 | Pending |
+| VERF-01 | Phase 4 | Pending |
+| VERF-02 | Phase 4 | Pending |
+| VERF-03 | Phase 4 | Pending |
+| VERF-04 | Phase 4 | Pending |
+| VERF-05 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 33 total
-- Mapped to phases: 0
-- Unmapped: 33 ⚠️
+- Mapped to phases: 33
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-26*
-*Last updated: 2026-03-26 after initial definition*
+*Last updated: 2026-03-26 after roadmap creation*
