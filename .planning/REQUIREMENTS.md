@@ -7,10 +7,10 @@
 
 ### Component Rules (COMP)
 
-- [ ] **COMP-01**: 3계층 컴포넌트 분리 규칙 정의 — Primitive(shadcn/ui 원본), Composed(프로젝트 래퍼), Page(골격 템플릿)
-- [ ] **COMP-02**: AI가 사용 가능한 컴포넌트 목록(Composed 계층만) 명시
-- [ ] **COMP-03**: AI가 직접 import 금지인 컴포넌트 목록(Primitive 계층) 명시
-- [ ] **COMP-04**: 핵심 Composed 컴포넌트의 인터페이스 계약(props, 사용 예시) 정의
+- [x] **COMP-01**: 3계층 컴포넌트 분리 규칙 정의 — Primitive(shadcn/ui 원본), Composed(프로젝트 래퍼), Page(골격 템플릿)
+- [x] **COMP-02**: AI가 사용 가능한 컴포넌트 목록(Composed 계층만) 명시
+- [x] **COMP-03**: AI가 직접 import 금지인 컴포넌트 목록(Primitive 계층) 명시
+- [x] **COMP-04**: 핵심 Composed 컴포넌트의 인터페이스 계약(props, 사용 예시) 정의
 
 ### Forbidden Patterns (FORB)
 
@@ -92,10 +92,10 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| COMP-01 | Phase 1 | Pending |
-| COMP-02 | Phase 1 | Pending |
-| COMP-03 | Phase 1 | Pending |
-| COMP-04 | Phase 1 | Pending |
+| COMP-01 | Phase 1 | Complete |
+| COMP-02 | Phase 1 | Complete |
+| COMP-03 | Phase 1 | Complete |
+| COMP-04 | Phase 1 | Complete |
 | TOKN-01 | Phase 1 | Complete |
 | TOKN-02 | Phase 1 | Complete |
 | TOKN-03 | Phase 1 | Complete |
