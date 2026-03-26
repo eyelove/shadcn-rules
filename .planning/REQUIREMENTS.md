@@ -43,9 +43,9 @@
 
 ### Naming Conventions (NAME)
 
-- [ ] **NAME-01**: 파일명 규칙 (컴포넌트 PascalCase, 페이지 kebab-case 등)
-- [ ] **NAME-02**: 컴포넌트명 규칙 (Composed는 접두사/접미사 컨벤션)
-- [ ] **NAME-03**: CSS 클래스명/변수명 규칙
+- [x] **NAME-01**: 파일명 규칙 (컴포넌트 PascalCase, 페이지 kebab-case 등)
+- [x] **NAME-02**: 컴포넌트명 규칙 (Composed는 접두사/접미사 컨벤션)
+- [x] **NAME-03**: CSS 클래스명/변수명 규칙
 
 ### Rule Format (RFMT)
 
@@ -113,9 +113,9 @@
 | FORM-01 | Phase 2 | Complete |
 | FORM-02 | Phase 2 | Complete |
 | FORM-03 | Phase 2 | Complete |
-| NAME-01 | Phase 2 | Pending |
-| NAME-02 | Phase 2 | Pending |
-| NAME-03 | Phase 2 | Pending |
+| NAME-01 | Phase 2 | Complete |
+| NAME-02 | Phase 2 | Complete |
+| NAME-03 | Phase 2 | Complete |
 | PAGE-01 | Phase 3 | Pending |
 | PAGE-02 | Phase 3 | Pending |
 | PAGE-03 | Phase 3 | Pending |

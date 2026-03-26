@@ -13,7 +13,7 @@ This project produces a rule document system that forces AI coding tools to gene
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Define design tokens, 3-tier component hierarchy, Composed component stubs, and rule document format (completed 2026-03-26)
-- [ ] **Phase 2: Rule Content** - Author forbidden pattern rules, form structure rules, and naming conventions
+- [x] **Phase 2: Rule Content** - Author forbidden pattern rules, form structure rules, and naming conventions (completed 2026-03-26)
 - [ ] **Phase 3: Page Templates** - Define all 4 page skeleton templates (list, detail, settings, dashboard)
 - [ ] **Phase 4: Verification** - Build automated violation detection, generate sample pages, and establish evaluation + refinement loop
 
@@ -52,7 +52,7 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md — Forbidden patterns: .claude/rules/forbidden.md (FORB-01 through FORB-05), update tokens.md and components.md with pointers
 - [x] 02-02-PLAN.md — Form rules: .claude/rules/forms.md (FORM-01, FORM-02, FORM-03)
-- [ ] 02-03-PLAN.md — Naming conventions + wiring: .claude/rules/naming.md (NAME-01, NAME-02, NAME-03), CLAUDE.md @imports, check-rules.sh extension
+- [x] 02-03-PLAN.md — Naming conventions + wiring: .claude/rules/naming.md (NAME-01, NAME-02, NAME-03), CLAUDE.md @imports, check-rules.sh extension
 
 ### Phase 3: Page Templates
 **Goal**: All 4 dashboard page types have canonical skeleton templates that define required zones, composition order, and which Composed components fill each zone
@@ -86,6 +86,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete   | 2026-03-26 |
-| 2. Rule Content | 0/3 | Not started | - |
+| 2. Rule Content | 3/3 | Complete   | 2026-03-26 |
 | 3. Page Templates | 0/TBD | Not started | - |
 | 4. Verification | 0/TBD | Not started | - |
