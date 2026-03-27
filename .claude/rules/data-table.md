@@ -298,7 +298,7 @@ For full format utility documentation, see: @.claude/rules/formatting.md
 
 ```tsx
 // FORBIDDEN — DataTable without Card wrapper
-<div className="flex flex-col gap-6 p-6">
+<div className="flex flex-col gap-4 p-4">
   <DataTable columns={columns} data={rows} />
 </div>
 

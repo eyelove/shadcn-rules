@@ -15,7 +15,7 @@ Use shadcn components directly (`@/components/ui/*`) plus Composed components (`
 
 | Rule | Description |
 |------|------------|
-| Root wrapper | `div.flex.flex-col.gap-6.p-6` -- all pages |
+| Root wrapper | `div.flex.flex-col.gap-4.p-4` -- all pages (spacing defaults: @tokens.md) |
 | Page header | NOT a Card -- `div` with `h1` + `p` + action Button |
 | Section order (dashboard) | KPI -> Chart -> Table (fixed) |
 | Section order (detail) | KPI -> Chart -> Related Table (fixed) |
@@ -38,11 +38,11 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { DataTable } from "@/components/composed"
 
-<div className="flex flex-col gap-6 p-6">
+<div className="flex flex-col gap-4 p-4">
   {/* Page Header -- div, not Card */}
   <div className="flex items-center justify-between">
     <div>
-      <h1 className="text-2xl font-semibold">Campaigns</h1>
+      <h1 className="text-xl font-semibold">Campaigns</h1>
       <p className="text-sm text-muted-foreground">Manage your campaigns</p>
     </div>
     <Button onClick={handleCreate}>New Campaign</Button>
@@ -99,7 +99,7 @@ import { ArrowLeftIcon } from "lucide-react"
 import { DataTable, KpiCard } from "@/components/composed"
 import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
 
-<div className="flex flex-col gap-6 p-6">
+<div className="flex flex-col gap-4 p-4">
   {/* Page Header -- div, not Card. Back button + status badge. */}
   <div className="flex items-center justify-between">
     <div className="flex items-center gap-4">
@@ -107,7 +107,7 @@ import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
         <ArrowLeftIcon className="h-4 w-4" />
       </Button>
       <div>
-        <h1 className="text-2xl font-semibold">{campaign.name}</h1>
+        <h1 className="text-xl font-semibold">{campaign.name}</h1>
         <p className="text-sm text-muted-foreground">Campaign details and performance</p>
       </div>
     </div>
@@ -197,13 +197,13 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Field, FieldLabel, FieldGroup, FieldSet, FieldLegend, FieldSeparator, FieldDescription } from "@/components/ui/field"
 import { ArrowLeftIcon } from "lucide-react"
 
-<div className="flex flex-col gap-6 p-6">
+<div className="flex flex-col gap-4 p-4">
   {/* Page Header -- div, not Card. Back button required. */}
   <div className="flex items-center gap-4">
     <Button variant="ghost" size="icon" onClick={() => navigate("/campaigns")}>
       <ArrowLeftIcon className="h-4 w-4" />
     </Button>
-    <h1 className="text-2xl font-semibold">Create Campaign</h1>
+    <h1 className="text-xl font-semibold">Create Campaign</h1>
   </div>
 
   {/* Single Card for entire form */}
@@ -300,11 +300,11 @@ import { ChartContainer } from "@/components/ui/chart"
 import { DataTable, KpiCard } from "@/components/composed"
 import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
 
-<div className="flex flex-col gap-6 p-6">
+<div className="flex flex-col gap-4 p-4">
   {/* Page Header -- div, not Card */}
   <div className="flex items-center justify-between">
     <div>
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
+      <h1 className="text-xl font-semibold">Dashboard</h1>
       <p className="text-sm text-muted-foreground">Overview of campaign performance</p>
     </div>
     <Button onClick={handleCreate}>New Campaign</Button>

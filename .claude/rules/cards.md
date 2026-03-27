@@ -271,7 +271,7 @@ When multiple related elements share a section, group them in one Card separated
   <CardHeader>
     <CardTitle>Campaign Summary</CardTitle>
   </CardHeader>
-  <CardContent className="space-y-6">
+  <CardContent className="space-y-4">
     <div className="grid grid-cols-2 gap-4">
       <div>
         <p className="text-sm text-muted-foreground">Status</p>
@@ -304,7 +304,7 @@ When multiple related elements share a section, group them in one Card separated
 ```
 
 **Rules:**
-- Use `space-y-6` or Separator to visually divide sub-sections inside CardContent
+- Use `space-y-4` or Separator to visually divide sub-sections inside CardContent (spacing defaults: @tokens.md)
 - NEVER create a second Card for the table — it shares context with the summary above
 // WHY: Mixed cards keep related data together. Splitting into separate cards implies independence.
 
@@ -312,15 +312,7 @@ When multiple related elements share a section, group them in one Card separated
 
 ## Column Layout Rules
 
-| Pattern | Grid Classes | Use |
-|---------|-------------|-----|
-| KPI 4-col | `grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4` | KPI card grid |
-| Chart 2-col | `grid grid-cols-1 gap-4 lg:grid-cols-2` | Two charts side by side |
-| Chart asymmetric | `grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]` | Main chart + secondary chart |
-| Form 1-col | Single Card, full width | Standard form page |
-| Form 2-col | `grid grid-cols-1 gap-4 lg:grid-cols-2` | Settings page with parallel form cards |
-
-// WHY: Consistent grid breakpoints (md for 2-col, lg for 4-col) create predictable responsive behavior across all page types.
+Column layout grid classes are defined in @.claude/rules/page-templates.md (Column Layout Reference). Do not duplicate here.
 
 ---
 
@@ -342,7 +334,7 @@ When multiple related elements share a section, group them in one Card separated
 // CORRECT — flat structure, use Separator for sub-grouping
 <Card>
   <CardHeader><CardTitle>Section</CardTitle></CardHeader>
-  <CardContent className="space-y-6">
+  <CardContent className="space-y-4">
     <div>...group A...</div>
     <Separator />
     <div>...group B...</div>

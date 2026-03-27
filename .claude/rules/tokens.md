@@ -46,22 +46,42 @@ NEVER use `rounded-md`, `rounded-lg` (Tailwind fixed values) — use the token-b
 
 ## Typography
 
-Font sizes: `text-xs` · `text-sm` · `text-base` · `text-lg` · `text-xl` · `text-2xl`
-Font weights: `font-normal` (body) · `font-medium` (labels, captions) · `font-semibold` (headings, KPI values)
-// WHY: Tailwind's type scale is in AI training data; custom --font-* tokens are not reliably known.
+한국어 폰트 기준. 본문 기본은 `text-sm`(14px). 프로젝트별 설정이 없으면 이 테이블을 따른다.
+// WHY: 한국어 글리프는 영문보다 복잡해서 16px(text-base)이 대시보드에서 과도하게 크다.
+// 14px이 한국어 가독성과 정보 밀도의 균형점이다.
+
+| 역할 | 클래스 | px | Weight |
+|------|--------|-----|--------|
+| 본문 (기본) | `text-sm` | 14 | `font-normal` |
+| 보조 텍스트, 캡션 | `text-xs` | 12 | `font-normal` |
+| 카드 제목 (CardTitle) | `text-base` | 16 | `font-semibold` |
+| 페이지 제목 (h1) | `text-xl` | 20 | `font-semibold` |
+| KPI 값 | `text-2xl` | 24 | `font-semibold` |
+| 라벨 (FieldLabel 등) | `text-sm` | 14 | `font-medium` |
 
 NEVER use inline `style={{ fontSize: "..." }}` or `style={{ fontWeight: "..." }}`.
 
 ## Spacing
 
-Use Tailwind spacing utilities: `p-4`, `px-6`, `gap-4`, `space-y-6`.
-NEVER use `style={{ padding: "..." }}` or `style={{ marginTop: "..." }}`.
-// WHY: Tailwind's spacing scale produces consistent density; inline style bypasses all constraints.
+대시보드 밀집형(dense) 기본값. 4px 단위(Tailwind 숫자 1 = 4px) 기반.
+프로젝트별 설정이 없으면 이 테이블을 따른다.
+// WHY: 대시보드는 한 화면에 많은 데이터를 보여야 하므로 여유형(p-6, gap-6)보다
+// 밀집형(p-4, gap-4)이 정보 밀도와 비교 효율에서 유리하다.
 
-Semantic spacing conventions:
-- Component internal padding: `p-4` or `p-6`
-- Between sibling components: `gap-4` or `gap-6`
-- Between page sections: `space-y-8` or `gap-8`
+| 역할 | 기본값 | px | 여유형 오버라이드 |
+|------|--------|-----|-----------------|
+| 페이지 루트 패딩 | `p-4` | 16 | `p-6` (24) |
+| 페이지 섹션 간 간격 | `gap-4` | 16 | `gap-6` (24) |
+| 카드 내부 패딩 | `p-4` | 16 | `p-6` (24) |
+| 카드 내 요소 간 간격 | `gap-3` | 12 | `gap-4` (16) |
+| 인라인 요소 간격 (버튼 그룹, 필터 toolbar) | `gap-2` | 8 | |
+| FieldSet 내부 필드 간 간격 | `gap-3` | 12 | `gap-4` (16) |
+| 테이블 필터 toolbar 하단 여백 | `pb-4` | 16 | |
+
+NEVER use `style={{ padding: "..." }}` or `style={{ marginTop: "..." }}`.
+// WHY: Tailwind의 spacing scale은 이미 4px 단위. inline style은 이 체계를 우회한다.
+
+프로젝트별 여유형 간격이 필요하면 CLAUDE.md 또는 프로젝트 토큰 파일에서 기본값을 재정의한다.
 
 ## Forbidden Patterns
 

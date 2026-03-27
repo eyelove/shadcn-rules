@@ -92,7 +92,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 
 // ALLOWED — div for page header layout
 <div className="flex items-center justify-between">
-  <h1 className="text-2xl font-semibold">Dashboard</h1>
+  <h1 className="text-xl font-semibold">Dashboard</h1>
   <Button>New Campaign</Button>
 </div>
 ```
