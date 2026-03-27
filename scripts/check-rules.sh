@@ -120,11 +120,12 @@ check "FORB-02" "No Tailwind color primitives (bg-zinc/gray/slate/stone/neutral)
 check "FORB-02" "No Tailwind text color primitives" 'text-\(zinc\|gray\|slate\|stone\|neutral\)-' "$TARGET"
 check "FORB-02" "No Tailwind border color primitives" 'border-\(zinc\|gray\|slate\|stone\|neutral\)-' "$TARGET"
 
-# 5. Direct shadcn imports
-check "COMP-01" "No direct @/components/ui/ imports" "from ['\"]@/components/ui/" "$TARGET"
+# 5. Direct shadcn imports — REMOVED
+# 2-tier model allows direct @/components/ui/ imports. This is correct usage, not a violation.
 
-# 6. Raw div for layout (heuristic)
-check "FORB-03" "No raw <div className= for layout" '<div className="flex\|<div className="grid\|<div className="space-' "$TARGET"
+# 6. Raw div as card substitute (heuristic: div with border + bg- mimicking a Card)
+# Layout divs (flex, grid, space-) without border/bg are allowed per FORB-03.
+check "FORB-03" "No raw div as card substitute (border + bg-)" '<div[^>]*className="[^"]*\(rounded-\|border\)[^"]*\(bg-\|border\)' "$TARGET"
 
 # 7. Raw HTML input elements
 check "FORB-05" "No raw <input " '<input ' "$TARGET"
@@ -146,13 +147,21 @@ check "FORB-05" "No standalone Checkbox (use FormField > Checkbox)" '<Checkbox[^
 # 16. Tailwind fixed rounded-sm (should use token)
 check "TOKEN-01" "No Tailwind fixed rounded-sm (use token)" 'rounded-sm' "$TARGET"
 
+# 17. FMT-01 — No inline number formatting (use @/lib/format utilities)
+check "FMT-01" "No inline toLocaleString() formatting" 'toLocaleString(' "$TARGET"
+check "FMT-01" "No inline Intl.NumberFormat" 'Intl\.NumberFormat' "$TARGET"
+
+# 18. FMT-02 — No hardcoded currency symbols in JSX templates
+check "FMT-02" "No hardcoded dollar sign in JSX" '>[^<]*\$[{<]\|{\`\$\|>\$<' "$TARGET"
+check "FMT-02" "No hardcoded won suffix in JSX" '}원<\|}원[^a-zA-Z]' "$TARGET"
+
 if [ "$FORMAT" != "jsonl" ]; then
   echo ""
   echo "--- REQUIRED PATTERNS ---"
 fi
 
-# 9. Should use composed imports (with or without trailing slash)
-check_absent "COMP-02" "Uses @/components/composed imports" "from ['\"]@/components/composed" "$TARGET"
+# 9. Composed imports — REMOVED
+# Not all pages need Composed components (e.g., form pages). Per-file check produces false positives.
 
 # 10. Uses token-based colors (optional — Composed components handle tokens internally)
 # Token classes may not appear in page-level code if Composed components encapsulate styling

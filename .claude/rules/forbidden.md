@@ -6,15 +6,17 @@ paths:
   - "app/**/*.css"
   - "components/**/*.tsx"
   - "components/**/*.css"
+  - "resources/js/**/*.tsx"
+  - "resources/css/**/*.css"
 ---
 
 # Forbidden Patterns
 
-These 5 patterns are NEVER allowed. Each entry has a rule statement, WHY comment, FORBIDDEN example, and CORRECT replacement.
+These 6 patterns are NEVER allowed. Each entry has a rule statement, WHY comment, FORBIDDEN example, and CORRECT replacement.
 
 ## FORB-01 — No Inline Styles
 
-NEVER use `style={{}}` on any HTML element or Composed component.
+NEVER use `style={{}}` on any HTML element or component.
 // WHY: Inline styles bypass the token system entirely and cannot be audited by grep or linting.
 
 ```tsx
@@ -54,59 +56,180 @@ stroke="oklch(0.5 0.2 240)"
 stroke="var(--chart-1)"
 ```
 
-## FORB-03 — No Raw div/span Layout
+## FORB-03 — No div as Card Substitute
 
-NEVER use `<div>` or `<span>` with layout classes (`flex`, `grid`, `space-`) as structural containers in page files.
-// WHY: Raw divs fragment structure. Composed components encode spacing and layout decisions — AI cannot violate them accidentally.
-
-```tsx
-// FORBIDDEN — raw div layout
-<div className="flex flex-col gap-4">
-  <div className="grid grid-cols-2 gap-6">
-
-// FORBIDDEN — raw span as layout wrapper
-<span className="flex gap-2 items-center">
-
-// CORRECT — Composed components handle layout
-<FormFieldSet legend="Basic Info">
-  <FormRow cols={2}>
-```
-
-**Exception:** `<span>` with text-styling classes inside DataTable `render` functions is allowed per components.md.
-
-## FORB-04 — No Direct shadcn Primitive Imports
-
-NEVER import from `@/components/ui/` in page or feature files.
-// WHY: Primitive imports bypass all layout, spacing, and style constraints encoded in Composed components.
+NEVER use a raw `<div>` with border/background/padding classes as a substitute for `Card` in dashboard sections (KPI groups, charts, tables, forms).
+// WHY: Card is the standard visual container with token-based surfaces (bg-card, border-border, rounded-[--radius]). Raw divs with ad-hoc border/background classes fragment theming and bypass Card's consistent structure.
 
 ```tsx
-// FORBIDDEN — direct primitive import
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
+// FORBIDDEN — div pretending to be a Card
+<div className="rounded-lg border bg-card p-4">
+  <h3 className="font-semibold">Revenue</h3>
+  <p>$12,345</p>
+</div>
 
-// CORRECT
-import { ActionButton, FormField, KpiCardGroup } from "@/components/composed"
-```
+// FORBIDDEN — div with shadow/border mimicking a card section
+<div className="border border-border rounded-[--radius] p-6 shadow-sm">
+  <BarChart />
+</div>
 
-Full allowed/forbidden import list: see components.md.
+// CORRECT — use Card with proper internal structure
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 
-## FORB-05 — No Bare Input (Outside FormField)
-
-NEVER use `<Input>`, `<Select>`, `<Textarea>`, or `<Checkbox>` outside a `<FormField>` wrapper.
-// WHY: FormField provides label, required indicator, description, and validation state. Bare inputs have no accessible label and skip all validation UI.
-
-```tsx
-// FORBIDDEN — bare Input with no FormField
 <Card>
-  <Input placeholder="Campaign name" />
+  <CardHeader><CardTitle>Revenue</CardTitle></CardHeader>
+  <CardContent><p>$12,345</p></CardContent>
+</Card>
+```
+
+**Allowed uses of div:** `<div>` with layout classes (`flex`, `grid`, `gap-*`, `space-*`) IS allowed for page-level layout structure such as page header areas, grid wrappers for Card columns, and spacing containers.
+```tsx
+// ALLOWED — div for page layout grid
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+  <Card>...</Card>
+  <Card>...</Card>
+</div>
+
+// ALLOWED — div for page header layout
+<div className="flex items-center justify-between">
+  <h1 className="text-2xl font-semibold">Dashboard</h1>
+  <Button>New Campaign</Button>
+</div>
+```
+
+For Card structure rules, see: @.claude/rules/cards.md
+
+## FORB-04 — No Unnecessary Composed Wrappers
+
+NEVER create wrapper components that merely pass through to a shadcn component without adding meaningful logic, layout, or constraint.
+// WHY: Thin wrappers add indirection with no benefit. They create a parallel API surface that drifts from upstream shadcn, making upgrades harder and documentation less useful.
+
+```tsx
+// FORBIDDEN — wrapper that adds nothing
+// components/composed/ActionButton.tsx
+import { Button } from "@/components/ui/button"
+
+interface ActionButtonProps {
+  children: React.ReactNode
+  onClick?: () => void
+  variant?: "default" | "outline" | "destructive"
+  disabled?: boolean
+}
+export function ActionButton({ children, ...props }: ActionButtonProps) {
+  return <Button {...props}>{children}</Button>  // just passes through
+}
+
+// CORRECT — use shadcn directly when no extra logic is needed
+import { Button } from "@/components/ui/button"
+
+<Button onClick={handleCreate}>New Campaign</Button>
+<Button variant="outline" onClick={onCancel}>Cancel</Button>
+```
+
+```tsx
+// ALLOWED — wrapper that adds real value (layout, composition, business logic)
+// A ConfirmDialog that composes AlertDialog + destructive styling + standard button layout
+export function ConfirmDialog({ open, title, description, onConfirm, onCancel, destructive }: ConfirmDialogProps) {
+  return (
+    <AlertDialog open={open}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={onCancel}>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm} variant={destructive ? "destructive" : "default"}>
+            Confirm
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}
+```
+
+## FORB-05 — No Bare Input (Outside Field)
+
+NEVER use `<Input>`, `<Select>`, `<Textarea>`, or `<Checkbox>` outside a `<Field>` wrapper in form contexts.
+// WHY: Field provides label, required indicator, description, and validation state. Bare inputs have no accessible label and skip all validation UI. See fields.md for the full Field component hierarchy.
+
+```tsx
+// FORBIDDEN — bare Input with no Field
+import { Input } from "@/components/ui/input"
+
+<Card>
+  <CardContent>
+    <Input placeholder="Campaign name" />
+  </CardContent>
 </Card>
 
-// CORRECT — Input always inside FormField
-<FormField label="Campaign Name" required>
+// CORRECT — Input inside Field
+import { Input } from "@/components/ui/input"
+import { Field, FieldLabel } from "@/components/ui/field"
+
+<Field>
+  <FieldLabel>Campaign Name</FieldLabel>
   <Input placeholder="Campaign name" />
-</FormField>
+</Field>
 ```
+
+**Exception (search/filter toolbar):** Inputs used in search or filter toolbars above a DataTable are allowed without a Field wrapper, since they function as transient filters rather than form fields with validation state.
+```tsx
+// ALLOWED — search input in a filter toolbar
+<div className="flex items-center gap-2">
+  <Input placeholder="Search campaigns..." value={search} onChange={onSearchChange} />
+  <Select value={statusFilter} onValueChange={setStatusFilter}>
+    <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+    <SelectContent>{statusOptions}</SelectContent>
+  </Select>
+</div>
+<DataTable columns={columns} data={filteredRows} />
+```
+
+For full Field rules and hierarchy, see: @.claude/rules/fields.md
+
+## FORB-06 — No Card Double Wrapping
+
+NEVER nest a Card inside another Card. One Card per section, one level deep.
+// WHY: Double wrapping creates redundant padding, doubled borders, and broken visual hierarchy. If content needs sub-grouping inside a Card, use Separator or gap utilities.
+
+```tsx
+// FORBIDDEN — Card inside Card
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+
+<Card>
+  <CardContent>
+    <Card>
+      <CardHeader><CardTitle>Nested Section</CardTitle></CardHeader>
+      <CardContent><p>This is double wrapped</p></CardContent>
+    </Card>
+  </CardContent>
+</Card>
+
+// CORRECT — single Card, use Separator for sub-grouping
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+
+<Card>
+  <CardHeader><CardTitle>Section</CardTitle></CardHeader>
+  <CardContent>
+    <div className="space-y-4">
+      <div>
+        <h4 className="text-sm font-medium text-muted-foreground">Sub-section A</h4>
+        <p>Content A</p>
+      </div>
+      <Separator />
+      <div>
+        <h4 className="text-sm font-medium text-muted-foreground">Sub-section B</h4>
+        <p>Content B</p>
+      </div>
+    </div>
+  </CardContent>
+</Card>
+```
+
+For Card structure rules and patterns, see: @.claude/rules/cards.md
 
 ## Escape Hatch Process
 

@@ -6,6 +6,8 @@ paths:
   - "app/**/*.css"
   - "components/**/*.tsx"
   - "components/**/*.css"
+  - "resources/js/**/*.tsx"
+  - "resources/css/**/*.css"
 ---
 
 # Token Rules
@@ -67,14 +69,39 @@ For all forbidden color patterns with FORBIDDEN/CORRECT examples, see: @.claude/
 
 ## Chart & Library Props
 
-Third-party libraries (Recharts, etc.) that accept color/style props MUST use token vars:
-```tsx
-// CORRECT
-stroke="var(--chart-1)"
-fill="var(--chart-2)"
-contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", color: "var(--card-foreground)" }}
+Third-party libraries (Recharts, etc.) that accept color/style props MUST use token vars.
+Charts live inside `Card > CardContent > ChartContainer` — see @.claude/rules/cards.md (CARD-02) for the full pattern.
 
-// FORBIDDEN
+```tsx
+// CORRECT — token vars inside Card > CardContent > ChartContainer
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { ChartContainer } from "@/components/ui/chart"
+
+<Card>
+  <CardHeader>
+    <CardTitle>Daily Spend</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <ChartContainer config={chartConfig}>
+      <LineChart data={data}>
+        <CartesianGrid stroke="var(--border)" />
+        <XAxis stroke="var(--muted-foreground)" />
+        <YAxis stroke="var(--muted-foreground)" />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: "var(--card)",
+            borderColor: "var(--border)",
+            color: "var(--card-foreground)",
+          }}
+        />
+        <Line stroke="var(--chart-1)" />
+        <Line stroke="var(--chart-2)" />
+      </LineChart>
+    </ChartContainer>
+  </CardContent>
+</Card>
+
+// FORBIDDEN — hardcoded values
 stroke="#8884d8"
 fill="blue"
 contentStyle={{ backgroundColor: "#fff" }}

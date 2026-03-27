@@ -1,20 +1,31 @@
 # Dashboard Rules
 
-This project uses shadcn/ui with a 3-tier component hierarchy enforced by rule documents.
-You are building a dashboard UI. Follow these rules for every file you touch.
+This project uses shadcn/ui directly with a 2-tier component model:
+- **shadcn tier**: Use shadcn/ui components directly (`@/components/ui/*`)
+- **Composed tier**: Domain-specific components with internal logic (`@/components/composed/*` — DataTable, SearchBar, KpiCard only)
+
+Follow these rules for every file you touch.
 
 @.claude/rules/components.md
-@.claude/rules/component-interfaces.md
+@.claude/rules/cards.md
+@.claude/rules/fields.md
+@.claude/rules/data-table.md
+@.claude/rules/formatting.md
 @.claude/rules/tokens.md
 @.claude/rules/forbidden.md
-@.claude/rules/forms.md
 @.claude/rules/naming.md
 @.claude/rules/page-templates.md
 
 ## Always Apply
 
-- **Imports**: Use ONLY `@/components/composed/` for UI components. Never import from `@/components/ui/` in page or feature files.
-  // WHY: Direct primitive imports bypass all layout and consistency constraints.
+- **Imports**: Use shadcn components directly from `@/components/ui/*`. Use `@/components/composed/` only for DataTable, SearchBar, KpiCard.
+  // WHY: shadcn components are the standard. Composed is only for domain logic that can't be expressed with direct shadcn usage.
+
+- **Card wrapping**: Every independent dashboard section (chart, table, form) MUST be wrapped in a Card. No Card double-wrapping. See `cards.md`.
+  // WHY: Card provides visual consistency across all sections. Double-wrapping breaks spacing.
+
+- **Field system**: All form inputs MUST be inside a `<Field>` with `<FieldLabel>`. Form buttons go in `<CardFooter>`. See `fields.md`.
+  // WHY: Field provides accessible labels and validation state. CardFooter gives consistent button placement.
 
 - **Tokens**: Use CSS custom property tokens for ALL color, spacing, and radius values. Never hardcode hex, rgb, or oklch literals.
   // WHY: Hardcoded values break theming and make dark mode impossible to maintain.
@@ -22,7 +33,7 @@ You are building a dashboard UI. Follow these rules for every file you touch.
 - **No inline styles**: Never use `style={{}}` on any element. Exception: third-party library API props (e.g., Recharts Tooltip contentStyle) — but values MUST still be CSS custom property tokens.
   // WHY: Inline styles bypass the token system and are impossible to audit automatically.
 
-- **New components**: Before creating a new UI component, propose it. Wait for approval. Create only in `@/components/composed/` with typed props and no className passthrough.
-  // WHY: Unauthorized components fragment the system and make rules unenforceable.
+- **Formatting**: Use locale-aware format utility functions for all numbers, currency, and percentages. See `formatting.md`.
+  // WHY: Consistent number formatting across KPI cards and tables. Supports multi-locale (ko-KR, en-US).
 
-- **Rule files**: When in doubt about what is allowed, read `.claude/rules/components.md` for component rules and `.claude/rules/tokens.md` for token rules. Do not infer — look it up.
+- **Rule files**: When in doubt about what is allowed, read the specific rule file. Do not infer — look it up.

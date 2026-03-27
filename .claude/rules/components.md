@@ -3,59 +3,110 @@ paths:
   - "src/**/*.tsx"
   - "app/**/*.tsx"
   - "components/**/*.tsx"
+  - "resources/js/**/*.tsx"
 ---
 
 # Component Rules
 
 ## Tier Model
 
-Three tiers. AI ONLY uses Composed and Page tiers.
+Two tiers. Use shadcn directly for standard UI. Use Composed only when a component meets qualification criteria.
 
-- **Primitive** (`@/components/ui/`): shadcn/ui originals. NEVER import in page or feature files.
-- **Composed** (`@/components/composed/`): project wrappers. ONLY legal import source for UI.
-- **Page** (`@/components/pages/`): skeleton templates. Use for full-page structure.
+| Tier | Import Path | What Lives Here | Examples |
+|------|------------|-----------------|----------|
+| **shadcn** | `@/components/ui/*` | Official shadcn/ui primitives. Import and use directly. | Card, Button, Badge, Input, Select, Dialog, Tabs |
+| **Composed** | `@/components/composed/` | Project-specific wrappers that encode internal state, domain logic, or repeated multi-component patterns. | DataTable, SearchBar, KpiCard |
 
-// WHY: Direct primitive imports bypass all layout, spacing, and style constraints. Composed
-// components encode those decisions — AI cannot accidentally violate them.
+// WHY: The old 3-tier model banned all shadcn imports, forcing every UI element through a wrapper.
+// Most wrappers added no logic — just forwarded props. Direct shadcn use eliminates that overhead.
+// Composed exists only when a component genuinely earns its abstraction.
 
 ## Import Convention
 
-Use barrel import from `@/components/composed`:
+### shadcn — direct imports
+
 ```tsx
-import { PageLayout, PageHeader, DataTable } from "@/components/composed"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table"
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { Separator } from "@/components/ui/separator"
+import { Label } from "@/components/ui/label"
 ```
-// WHY: Barrel import keeps imports consistent and discoverable across all pages.
 
-## Allowed Imports
+// WHY: shadcn components are well-documented, tree-shakeable, and accessible by default.
+// Wrapping them without adding logic creates indirection with no benefit.
 
-DO import ONLY from `@/components/composed`:
+### Composed — barrel import
 
-PageLayout · PageHeader · SearchBar · KpiCardGroup · ChartSection · DataTable
-FormFieldSet · FormField · FormRow · FormActions · ConfirmDialog · StatusBadge · ActionButton
+```tsx
+import { DataTable, SearchBar, KpiCard } from "@/components/composed"
+```
 
-**Form primitives inside FormField:** `Input`, `Select`, `Textarea`, `Checkbox`, `DateRangePicker`
-are imported from `@/components/composed` and used ONLY as children of `FormField`.
-NEVER use them standalone outside a FormField wrapper.
+// WHY: Barrel import keeps Composed components discoverable. All Composed components MUST be
+// exported from `@/components/composed/index.ts`.
 
-## Forbidden Imports
+## Composed Qualification
 
-NEVER import from these paths in page or feature files:
+A component belongs in Composed ONLY if it meets at least one of these criteria:
 
-- `@/components/ui/button` — use ActionButton from composed
-- `@/components/ui/input` — use FormField > Input from composed
-- `@/components/ui/select` — use FormField > Select from composed
-- `@/components/ui/table` — use DataTable from composed
-- `@/components/ui/card` — use KpiCardGroup or ChartSection from composed
-- `@/components/ui/badge` — use StatusBadge from composed
-- `@/components/ui/dialog` — use ConfirmDialog from composed
-- `@/components/ui/field` — use FormField from composed
-- `@/components/ui/textarea` — use FormField > Textarea from composed
-- `@/components/ui/checkbox` — use FormField > Checkbox from composed
+### 1. Internal state logic
+The component manages its own state (sorting, filtering, pagination) that callers should not handle.
 
-## No className
+```tsx
+// IS Composed — DataTable manages sort state, pagination, and column visibility internally
+<DataTable columns={columns} data={rows} onRowClick={handleClick} />
 
-No `className` prop on any Composed component.
-// WHY: className gives AI a direct path back to primitive-level styling, bypassing all constraints.
+// IS NOT Composed — a Card with static content has no internal state
+<Card><CardHeader><CardTitle>Revenue</CardTitle></CardHeader>
+  <CardContent>$42,000</CardContent></Card>
+```
+
+### 2. Domain-specific combination
+The component combines multiple primitives into a pattern that encodes domain rules.
+
+```tsx
+// IS Composed — KpiCard combines Card + delta formatting + positive/negative color logic
+<KpiCard label="Total Spend" value="$12,400" delta="+8%" deltaPositive />
+
+// IS NOT Composed — a Button with an icon is just standard shadcn usage
+<Button variant="outline"><PlusIcon className="mr-2 h-4 w-4" />New Campaign</Button>
+```
+
+### 3. Repeated pattern abstraction
+The same multi-component arrangement appears 3+ times across pages with identical structure.
+
+```tsx
+// IS Composed — SearchBar encodes filter config -> form fields -> submit pattern
+<SearchBar filters={filterConfig} onSearch={handleSearch} />
+
+// IS NOT Composed — a one-off form section used on a single page
+<div className="flex gap-4"><Input placeholder="Search..." /><Button>Go</Button></div>
+```
+
+// WHY: These criteria prevent premature abstraction. If a pattern does not manage state,
+// encode domain rules, or repeat across pages, it should stay as direct shadcn usage.
+
+## Composed Component List
+
+| Component | Role | Internal Logic |
+|-----------|------|---------------|
+| **DataTable** | Sortable, paginated, clickable data table | Sort state, pagination, column visibility, empty state, loading state |
+| **SearchBar** | Configurable filter bar with multiple input types | Filter state management, debounced search, config-driven field rendering |
+| **KpiCard** | Metric card with label, value, and delta | Delta formatting, positive/negative color selection via tokens |
+
+For detailed Props contracts and usage examples, see:
+- @.claude/rules/data-table.md — DataTable columns, actions, render functions
+- @.claude/rules/cards.md — KpiCard props, delta formatting, grid layout
+- @.claude/rules/fields.md — form field patterns with shadcn primitives
 
 ## Render Functions in DataTable
 
@@ -63,7 +114,7 @@ When using `render` in DataTable columns, you MAY use `<span>` with token-based 
 ```tsx
 // ALLOWED — token-based text styling in render functions
 render: (value) => <span className="font-medium text-foreground">{value}</span>
-render: (value) => <StatusBadge status={value} />
+render: (value) => <Badge variant="outline">{value}</Badge>
 
 // FORBIDDEN — hardcoded colors or inline styles in render functions
 render: (value) => <span style={{ color: "red" }}>{value}</span>
@@ -77,27 +128,27 @@ When using chart libraries (Recharts, etc.) that REQUIRE style props in their AP
 - Use CSS custom property tokens: `"var(--chart-1)"`, `"var(--border)"`, `"var(--card)"`
 - NEVER use hardcoded hex/rgb values even in library props
 ```tsx
-// CORRECT — token-based chart styling
+// CORRECT
 <CartesianGrid stroke="var(--border)" />
-<XAxis stroke="var(--muted-foreground)" />
 <Tooltip contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", color: "var(--card-foreground)" }} />
-<Line stroke="var(--chart-1)" />
 
-// FORBIDDEN — hardcoded values in library props
+// FORBIDDEN
 <CartesianGrid stroke="#e5e7eb" />
-<Line stroke="blue" />
 ```
 // WHY: Library props are the one exception to "no style={{}}". But values MUST still be tokens.
 
 ## Escape Hatch
 
-Need a UI element not covered above?
-1. STOP — do not reach for `@/components/ui/` directly
-2. Describe the needed component and ask for approval to create a new Composed component
-3. After approval, create it in `@/components/composed/` with a typed props interface
-4. NEVER add className to the new component's props
+Need a new Composed component?
+1. Verify it meets at least one Composed Qualification criterion above
+2. Describe the component, its internal logic, and why direct shadcn usage is insufficient
+3. Wait for approval before creating
+4. After approval, create it in `@/components/composed/` with a typed props interface
+5. Export it from `@/components/composed/index.ts`
+6. NEVER add `className` to a Composed component's public props
 
-For FORBIDDEN/CORRECT examples of all 5 forbidden patterns, see: @.claude/rules/forbidden.md
+// WHY: Composed components are high-trust abstractions. Each one adds API surface that every
+// consumer must learn. The approval gate prevents premature or redundant abstractions.
 
-**For full component interface contracts (Props types and usage examples), see:**
-@.claude/rules/component-interfaces.md
+For token rules, see: @.claude/rules/tokens.md
+For forbidden patterns, see: @.claude/rules/forbidden.md

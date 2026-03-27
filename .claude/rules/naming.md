@@ -10,6 +10,9 @@ paths:
   - "hooks/**/*.ts"
   - "types/**/*.ts"
   - "tokens/**/*.css"
+  - "resources/js/**/*.tsx"
+  - "resources/js/**/*.ts"
+  - "resources/css/**/*.css"
 ---
 
 # Naming Conventions
@@ -19,7 +22,7 @@ paths:
 | File Type | Convention | Examples |
 |-----------|-----------|---------|
 | Page files | kebab-case | campaign-list.tsx, campaign-form.tsx, ad-group-detail.tsx |
-| Composed components | PascalCase | DataTable.tsx, SearchBar.tsx, FormFieldSet.tsx |
+| Composed components | PascalCase | DataTable.tsx, SearchBar.tsx, KpiCard.tsx |
 | Hook files | camelCase with use prefix | useFilters.ts, usePagination.ts, useCampaignData.ts |
 | Type files | PascalCase | Campaign.ts, AdGroup.ts, FilterConfig.ts |
 | CSS token files | kebab-case | globals.css, dashboard-tokens.css |
@@ -29,31 +32,31 @@ paths:
 
 ## NAME-02 — Component Naming
 
-Composed components MUST follow these naming patterns:
+Composed components (domain-specific wrappers) follow these naming patterns:
 
 | Pattern | Use For | Examples |
 |---------|---------|---------|
-| Noun | Single-purpose display | DataTable, StatusBadge, PageHeader |
-| NounGroup | Multi-item container | KpiCardGroup, ChartSection |
-| FormNoun | Form-specific | FormField, FormFieldSet, FormRow, FormActions |
-| ActionNoun | Interactive | ActionButton, ConfirmDialog |
+| Noun | Single-purpose display | DataTable, SearchBar, KpiCard |
+| NounGroup | Multi-item container | (reserved for future use) |
 
 NEVER use a UI suffix or Base prefix (UIButton, BaseCard).
 // WHY: UI/Base prefixes are shadcn primitive naming conventions. Using them implies
 // the component is a primitive, not a Composed wrapper — this breaks the tier model.
 
+shadcn components keep their original names: Card, Button, Badge, Input, Select, Dialog, etc.
+Import them directly from `@/components/ui/`.
+
 Barrel export — all Composed components MUST be exported from `@/components/composed/index.ts`:
 
 ```tsx
 // CORRECT — barrel import
-import { DataTable, FormField, ActionButton } from "@/components/composed"
+import { DataTable, SearchBar, KpiCard } from "@/components/composed"
 
 // FORBIDDEN — direct file import bypassing barrel
 import { DataTable } from "@/components/composed/DataTable"
 ```
 
-// WHY: The barrel is a single choke point. Every new component must be registered here
-// to be usable. All 4 Phase 1 test samples confirmed consistent barrel usage.
+// WHY: The barrel is a single choke point. Only DataTable, SearchBar, and KpiCard belong here.
 
 ## NAME-03 — CSS Variable and Class Naming
 
@@ -73,11 +76,12 @@ CSS module file naming (if used): `ComponentName.module.css` — matches the com
 
 ```
 components/
-  ui/          <- shadcn primitives — DO NOT edit or import directly
-  composed/    <- AI creates new components here ONLY
-app/ or pages/ <- page files (framework-dependent)
-hooks/         <- custom React hooks (useX naming required)
+  ui/          <- shadcn primitives — import directly in page files
+  composed/    <- Domain-specific: DataTable, SearchBar, KpiCard ONLY
+app/ or pages/ <- page files
+hooks/         <- custom React hooks
 types/         <- shared TypeScript types
+lib/           <- utility functions (format.ts, etc.)
 tokens/        <- CSS custom property files
 ```
 
