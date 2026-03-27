@@ -1,0 +1,41 @@
+---
+type: normal
+page: campaign-form
+template: PAGE-03
+expected_violations: 0
+---
+
+# Campaign Form 페이지 생성
+
+아래 요구사항에 맞는 캠페인 생성/편집 폼 페이지를 작성하세요.
+프로젝트의 `.claude/rules/` 디렉토리에 있는 모든 규칙을 준수해야 합니다.
+
+## 요구사항
+
+### 페이지 헤더
+- Back 버튼 (campaigns 목록으로)
+- 제목: "Create Campaign"
+
+### 폼 구조 (단일 Card)
+#### Section 1 — Basic Info (FieldSet)
+- Campaign Name (Input, required)
+- Status (Select: Active, Draft, Paused)
+- Description (Textarea, optional)
+
+#### Section 2 — Budget & Targeting (FieldSet)
+- Daily Budget (Input number)
+- Region (Select: US, EU, APAC)
+- Start Date / End Date (Input date, 2-column grid)
+
+### CardFooter
+- Cancel (outline) + Save (submit)
+- form id 연결
+
+### 기타
+- react-hook-form + Controller 패턴 사용
+- FieldError 표시
+- 로케일: en-US
+
+## 출력
+- 파일명: `tests/samples/campaign-form.normal.tsx`
+- 단일 파일, 목 데이터 인라인
