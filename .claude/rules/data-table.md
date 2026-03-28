@@ -296,29 +296,7 @@ For full format utility documentation, see: @.claude/rules/formatting.md
 
 ## TABLE-06 — Forbidden Patterns
 
-```tsx
-// FORBIDDEN — DataTable without Card wrapper
-<div className="flex flex-col gap-4 p-4">
-  <DataTable columns={columns} data={rows} />
-</div>
-
-// CORRECT — DataTable inside Card with CardHeader
-<Card>
-  <CardHeader>
-    <CardTitle>Campaigns</CardTitle>
-  </CardHeader>
-  <CardContent>
-    <DataTable columns={columns} data={rows} />
-  </CardContent>
-</Card>
-```
-// WHY: Card provides consistent border, padding, and background. Naked DataTable breaks visual rhythm.
-
-```tsx
-// FORBIDDEN — DataTable with internal Card (Card baked into DataTable component)
-// DataTable must be Card-free; the wrapper lives in the page file.
-```
-// WHY: Baking Card into DataTable prevents composition (e.g., CardHeader with title/actions above the table).
+DataTable and Table MUST always be inside `Card > CardContent`. Card wrapping rules: @.claude/rules/cards.md CARD-03
 
 ```tsx
 // FORBIDDEN — Large dataset (100+ rows) with shadcn Table directly

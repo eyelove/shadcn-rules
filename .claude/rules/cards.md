@@ -289,28 +289,10 @@ Column layout grid classes are defined in @.claude/rules/page-templates.md (Colu
 
 ### Card Double Wrapping
 
-```tsx
-// FORBIDDEN — Card inside Card
-<Card>
-  <CardContent>
-    <Card>
-      <CardHeader><CardTitle>Nested</CardTitle></CardHeader>
-      <CardContent>...</CardContent>
-    </Card>
-  </CardContent>
-</Card>
-
-// CORRECT — flat structure, use Separator for sub-grouping
-<Card>
-  <CardHeader><CardTitle>Section</CardTitle></CardHeader>
-  <CardContent className="space-y-4">
-    <div>...group A...</div>
-    <Separator />
-    <div>...group B...</div>
-  </CardContent>
-</Card>
-```
+NEVER nest Card inside Card. One Card per section, one level deep.
 // WHY: Nested cards double padding and borders, creating visual noise and broken elevation hierarchy.
+
+Full rule with examples: @.claude/rules/forbidden.md FORB-06
 
 ### Card Without CardHeader
 
