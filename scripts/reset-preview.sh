@@ -63,6 +63,11 @@ echo "  ✓ AI-generated files removed"
 # ── Reapply eval templates ──
 cp "${TEMPLATES_DIR}/App.shell.tsx" "${PREVIEW_DIR}/src/App.tsx"
 cp "${TEMPLATES_DIR}/App.viewer.tsx" "${PREVIEW_DIR}/src/App.viewer.tsx"
+mkdir -p "${PREVIEW_DIR}/src/lib"
+cp "${TEMPLATES_DIR}/utils.ts" "${PREVIEW_DIR}/src/lib/utils.ts"
+cp "${TEMPLATES_DIR}/format.ts" "${PREVIEW_DIR}/src/lib/format.ts"
+mkdir -p "${PREVIEW_DIR}/src/components/composed"
+cp -r "${TEMPLATES_DIR}/composed/" "${PREVIEW_DIR}/src/components/composed/"
 echo "  ✓ eval templates applied"
 
 echo ""

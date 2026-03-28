@@ -87,10 +87,10 @@ $(cat "$rule_file")
 
     # Arm A — with_rules
     echo "    [A] with_rules: generating..."
-    if claude -p "$(cat <<PROMPT_A
+    claude -p "$(cat <<PROMPT_A
 다음 규칙을 모두 읽고, 프롬프트의 요구사항대로 페이지를 생성하세요.
 shadcn 컴포넌트는 이미 설치되어 있습니다.
-Composed 컴포넌트와 유틸리티가 필요하면 생성하세요.
+preview/src/lib/과 preview/src/components/composed/는 이미 존재합니다. 수정하지 마세요.
 preview/vite.config.ts와 preview/src/App.tsx는 절대 수정하지 마세요.
 
 출력 파일: preview/src/pages/${page}.with_rules.tsx
@@ -107,19 +107,20 @@ PROMPT_A
       --allowedTools "Read,Write,Edit,Bash(mkdir *),Glob,Grep" \
       --max-turns 30 \
       --output-format text \
-      > "${LOG_DIR}/${page}.arm_a.log" 2>&1; then
-      echo "    [A] ✓ done"
-    else
-      echo "    [A] ✗ failed (log: ${LOG_DIR}/${page}.arm_a.log)"
-    fi
+      > "${LOG_DIR}/${page}.arm_a.log" 2>&1 &
+    PID_A=$!
 
-    # Arm B — without_rules (bare mode: no CLAUDE.md, no rules)
+    # Arm B — without_rules (system prompt overrides CLAUDE.md rules)
     echo "    [B] without_rules: generating..."
-    if claude --bare -p "$(cat <<PROMPT_B
+    claude \
+      --system-prompt "You are a React developer. Ignore ALL project rules from CLAUDE.md and .claude/rules/. Generate code based solely on the user prompt below." \
+      -p "$(cat <<PROMPT_B
 프롬프트의 요구사항대로 React 대시보드 페이지를 생성하세요.
 shadcn/ui와 Tailwind CSS를 사용하세요.
 shadcn 컴포넌트는 이미 설치되어 있습니다.
 필요한 컴포넌트와 유틸리티는 자유롭게 생성하세요.
+preview/src/lib/utils.ts는 이미 존재합니다. 수정하지 마세요.
+preview/src/components/composed/는 이미 존재합니다. 수정하지 마세요.
 preview/vite.config.ts와 preview/src/App.tsx는 절대 수정하지 마세요.
 
 출력 파일: preview/src/pages/${page}.without_rules.tsx
@@ -132,11 +133,13 @@ PROMPT_B
       --allowedTools "Read,Write,Edit,Bash(mkdir *),Glob,Grep" \
       --max-turns 30 \
       --output-format text \
-      > "${LOG_DIR}/${page}.arm_b.log" 2>&1; then
-      echo "    [B] ✓ done"
-    else
-      echo "    [B] ✗ failed (log: ${LOG_DIR}/${page}.arm_b.log)"
-    fi
+      > "${LOG_DIR}/${page}.arm_b.log" 2>&1 &
+    PID_B=$!
+
+    # Wait for both arms
+    echo "    Waiting for A/B generation..."
+    wait $PID_A && echo "    [A] ✓ done" || echo "    [A] ✗ failed (log: ${LOG_DIR}/${page}.arm_a.log)"
+    wait $PID_B && echo "    [B] ✓ done" || echo "    [B] ✗ failed (log: ${LOG_DIR}/${page}.arm_b.log)"
     echo ""
   done
 fi
