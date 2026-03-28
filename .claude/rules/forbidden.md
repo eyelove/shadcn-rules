@@ -27,13 +27,13 @@ NEVER use `style={{}}` on any HTML element or component.
 <div className="mt-6 p-4">
 ```
 
-**Exception (third-party library API only):** Recharts and similar libraries have props that ONLY accept style objects (e.g., `contentStyle`, `labelStyle`). These are allowed IF AND ONLY IF all values use CSS custom property tokens:
+**No exceptions.** shadcn provides `ChartTooltip` + `ChartTooltipContent` from `@/components/ui/chart` which handle tooltip styling with token-based classes internally. There is no need for raw Recharts `<Tooltip contentStyle={{...}}>`.
 ```tsx
-// ALLOWED — library prop, values are tokens
-<Tooltip contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", color: "var(--card-foreground)" }} />
+// FORBIDDEN — raw Recharts Tooltip with inline style
+<Tooltip contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)" }} />
 
-// FORBIDDEN — library prop with hardcoded values
-<Tooltip contentStyle={{ backgroundColor: "#fff", color: "black" }} />
+// CORRECT — shadcn ChartTooltip (no style prop needed)
+<ChartTooltip content={<ChartTooltipContent />} />
 ```
 
 ## FORB-02 — No Hardcoded Colors

@@ -240,20 +240,20 @@ if [ "$FORMAT" != "jsonl" ]; then
   echo "--- FORM STRUCTURE ---"
 fi
 
-# FORM-02: Reversed FormActions order — Submit before Cancel (Cancel=outline must come first)
-check "FIELD-01" "No reversed FormActions order (Submit before Cancel)" 'type="submit">[^<]*</ActionButton>[[:space:]]*<ActionButton variant="outline"' "$TARGET"
+# FIELD-01: Reversed button order in CardFooter — Submit before Cancel (Cancel=outline must come first)
+check "FIELD-01" "No reversed button order (Submit before Cancel)" 'type="submit">[^<]*</Button>[[:space:]]*<Button variant="outline"' "$TARGET"
 
-# FORM-03: No bare <label> tags — use FormField label= prop
-check "FIELD-02" "No bare <label> tags (use FormField label= prop)" '<label ' "$TARGET"
+# FIELD-02: No bare <label> tags — use FieldLabel inside Field
+check "FIELD-02" "No bare <label> tags (use FieldLabel)" '<label ' "$TARGET"
 
-# FORM-03: No inline style on <form> element
+# FORB-01: No inline style on <form> element
 check "FORB-01" "No raw <form> with inline style" '<form[^>]*style=' "$TARGET"
 
-# FORM-02: No FormActions inside FormFieldSet (FormActions must be sibling of FormFieldSet)
-check "FIELD-03" "No FormActions inside FormFieldSet" 'FormFieldSet[^<]*>[[:space:]]*<FormActions' "$TARGET"
+# FIELD-03: No submit button inside CardContent (must be in CardFooter)
+check "FIELD-03" "No submit button inside CardContent" 'CardContent[^<]*>[[:space:]]*.*type="submit"' "$TARGET"
 
-# FORM-01: No raw <input> tags used in forms (must use FormField > Input)
-check "FIELD-04" "No raw <input> in form (use FormField > Input)" '<input ' "$TARGET"
+# FIELD-04: No raw <input> tags (must use shadcn Input inside Field)
+check "FIELD-04" "No raw <input> in form (use Field > Input)" '<input ' "$TARGET"
 
 if [ "$FORMAT" != "jsonl" ]; then
   echo ""
@@ -266,8 +266,10 @@ check "NAME-02" "No direct Composed file imports (use barrel @/components/compos
 # NAME-02: No UI/Base prefix anti-patterns on component names
 check "NAME-02" "No UIButton/BaseCard/UICard/UIInput/BaseInput anti-patterns" '\(UIButton\|UICard\|BaseCard\|UIInput\|BaseInput\|UITable\)' "$TARGET"
 
-# NAME-03: No CSS custom property definitions inside TSX files (define in globals.css/tokens only)
-check "NAME-03" "No CSS custom property definitions inside TSX (use tokens/globals.css)" '--[a-z][a-z-]*:[[:space:]]*[^;]*;' "$TARGET"
+# NAME-03: No CSS custom property definitions inside TSX files
+# Only match standalone definitions like `--my-var: value;`, not references like `var(--my-var)`
+# Exclude lines containing var( which are references, not definitions
+check "NAME-03" "No CSS custom property definitions inside TSX" '--[a-z][a-z-]*:[[:space:]]*oklch\|--[a-z][a-z-]*:[[:space:]]*#[0-9a-fA-F]' "$TARGET"
 
 # FORB-01 extension: No var() inside className (tokens as Tailwind classes, not CSS vars)
 check "TOKEN-01" "No var(--) inside className attribute" 'className=[^"]*var(--' "$TARGET"
@@ -280,15 +282,15 @@ fi
 # PAGE-02: No TabGroup on any page (forbidden — flat KPI→Chart→Table structure required)
 check "PAGE-01" "No TabGroup (forbidden — use flat KPI→Chart→Table structure)" '<TabGroup' "$TARGET"
 
-# PAGE-04: No ChartSection cols=1 on dashboard (dashboard requires cols=2)
-check "PAGE-02" "No ChartSection cols=1 (dashboard requires cols=2)" 'ChartSection cols={1}' "$TARGET"
-
-# PAGE-04/PAGE-02: No ChartSection without explicit cols prop
-check "PAGE-03" "No <ChartSection> tag without cols prop (cols required)" '<ChartSection>' "$TARGET"
+# PAGE-02: No ChartSection (removed Composed component — use Card + ChartContainer directly)
+check "PAGE-02" "No ChartSection (use Card + ChartContainer directly)" '<ChartSection' "$TARGET"
 
 # PAGE-01: KpiCardGroup check removed — KpiCardGroup is valid on Dashboard and Detail pages.
 # List pages should not have KpiCardGroup, but grep cannot distinguish page types.
 # Use evaluate.md checklist for page-type-specific structural validation.
+
+# FORB-01: No raw Recharts Tooltip with contentStyle (use ChartTooltip + ChartTooltipContent)
+check "FORB-01" "No raw Recharts Tooltip contentStyle (use ChartTooltip)" 'contentStyle={{' "$TARGET"
 
 # FORB-03 extension: No raw <span> used as flex layout container
 check "PAGE-04" "No raw <span> as flex layout container" '<span className="flex' "$TARGET"
@@ -306,22 +308,7 @@ if [ -n "$PROMPT_FILE" ] && [ -n "$PREVIEW_DIR" ]; then
     echo "--- ENVIRONMENT CHECKS ---"
   fi
 
-  # ENV-01: expected_ui components are installed
-  in_section=0
-  while IFS= read -r line; do
-    if echo "$line" | grep -q "^expected_ui:"; then
-      in_section=1
-      continue
-    fi
-    if [ "$in_section" = "1" ]; then
-      if echo "$line" | grep -q "^  - "; then
-        comp=$(echo "$line" | sed 's/^  - //')
-        check_file_exists "ENV-01" "shadcn component installed: ${comp}" "${PREVIEW_DIR}/src/components/ui/${comp}.tsx"
-      else
-        in_section=0
-      fi
-    fi
-  done < "$PROMPT_FILE"
+  # ENV-01: removed — shadcn components are pre-installed by reset-preview.sh
 
   # ENV-02: expected_composed components exist + barrel export
   in_section=0

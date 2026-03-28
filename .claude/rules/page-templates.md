@@ -94,7 +94,7 @@ Section order is fixed: KPI -> Chart -> Table.
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardAction } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ChartContainer } from "@/components/ui/chart"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { ArrowLeftIcon } from "lucide-react"
 import { DataTable, KpiCard } from "@/components/composed"
 import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
@@ -136,7 +136,7 @@ import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
             <CartesianGrid stroke="var(--border)" />
             <XAxis stroke="var(--muted-foreground)" />
             <YAxis stroke="var(--muted-foreground)" />
-            <Tooltip contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", color: "var(--card-foreground)" }} />
+            <ChartTooltip content={<ChartTooltipContent />} />
             <Line stroke="var(--chart-1)" />
           </LineChart>
         </ChartContainer>
@@ -153,7 +153,7 @@ import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
         <ChartContainer config={channelChartConfig}>
           <PieChart>
             <Pie data={channelData} fill="var(--chart-2)" />
-            <Tooltip contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", color: "var(--card-foreground)" }} />
+            <ChartTooltip content={<ChartTooltipContent />} />
           </PieChart>
         </ChartContainer>
       </CardContent>
@@ -179,6 +179,7 @@ import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
 // - Wrapping the page header in a Card -- page headers are plain divs
 // - Placing Badge outside the page header area -- status belongs in the header
 // - Using hardcoded hex/rgb in chart props -- use `var(--chart-N)` tokens
+// - Using raw Recharts `<Tooltip contentStyle={{...}}>` -- use `<ChartTooltip content={<ChartTooltipContent />} />`
 // - Using TabGroup to wrap sections -- flat KPI -> Chart -> Table sequence only
 
 ---
@@ -296,7 +297,7 @@ Chart grid MUST use `lg:grid-cols-2` on dashboards.
 ```tsx
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardAction } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChartContainer } from "@/components/ui/chart"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { DataTable, KpiCard } from "@/components/composed"
 import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
 
@@ -333,7 +334,7 @@ import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
             <CartesianGrid stroke="var(--border)" />
             <XAxis stroke="var(--muted-foreground)" />
             <YAxis stroke="var(--muted-foreground)" />
-            <Tooltip contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", color: "var(--card-foreground)" }} />
+            <ChartTooltip content={<ChartTooltipContent />} />
             <Line stroke="var(--chart-1)" />
           </LineChart>
         </ChartContainer>
@@ -353,7 +354,7 @@ import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
             <CartesianGrid stroke="var(--border)" />
             <XAxis stroke="var(--muted-foreground)" />
             <YAxis stroke="var(--muted-foreground)" />
-            <Tooltip contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", color: "var(--card-foreground)" }} />
+            <ChartTooltip content={<ChartTooltipContent />} />
             <Bar fill="var(--chart-2)" />
           </BarChart>
         </ChartContainer>
@@ -380,6 +381,7 @@ import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
 // - Placing DataTable before chart section -- section order is KPI -> Chart -> Table
 // - Wrapping page header in a Card -- page headers are plain divs
 // - Using hardcoded hex/rgb in chart props -- use `var(--chart-N)` tokens
+// - Using raw Recharts `<Tooltip contentStyle={{...}}>` -- use `<ChartTooltip content={<ChartTooltipContent />} />`
 // - Using ChartContainer without Card wrapper -- charts live inside Card > CardContent
 
 ---

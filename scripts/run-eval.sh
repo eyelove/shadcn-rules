@@ -56,7 +56,7 @@ if [ "$CHECK_ONLY" = false ]; then
 fi
 
 # ── Step 2: Collect prompts ──
-PROMPTS=$(find "$PROMPT_DIR" -name "*.md" ! -name "setup.md" 2>/dev/null | sort)
+PROMPTS=$(find "$PROMPT_DIR" -name "*.md" 2>/dev/null | sort)
 if [ -z "$PROMPTS" ]; then
   echo "No prompt files found in ${PROMPT_DIR}/"
   exit 1

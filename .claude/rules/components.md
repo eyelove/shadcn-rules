@@ -122,20 +122,22 @@ render: (value) => <span className="text-red-500">{value}</span>
 ```
 // WHY: DataTable render functions need lightweight formatting. Token classes keep consistency.
 
-## Third-Party Library Styling
+## Chart Library Usage
 
-When using chart libraries (Recharts, etc.) that REQUIRE style props in their API:
-- Use CSS custom property tokens: `"var(--chart-1)"`, `"var(--border)"`, `"var(--card)"`
-- NEVER use hardcoded hex/rgb values even in library props
+Charts use shadcn's `ChartContainer`, `ChartTooltip`, and `ChartTooltipContent` from `@/components/ui/chart`.
+Recharts axis/grid props that accept string values MUST use token vars. Tooltip styling is handled by `ChartTooltipContent` internally.
 ```tsx
-// CORRECT
+// CORRECT — shadcn chart components + token vars
 <CartesianGrid stroke="var(--border)" />
-<Tooltip contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", color: "var(--card-foreground)" }} />
+<ChartTooltip content={<ChartTooltipContent />} />
 
-// FORBIDDEN
+// FORBIDDEN — raw Recharts Tooltip with inline style
+<Tooltip contentStyle={{ backgroundColor: "var(--card)" }} />
+
+// FORBIDDEN — hardcoded colors
 <CartesianGrid stroke="#e5e7eb" />
 ```
-// WHY: Library props are the one exception to "no style={{}}". But values MUST still be tokens.
+// WHY: shadcn's ChartTooltipContent handles theming with token-based classes. No style={{}} needed.
 
 ## Escape Hatch
 
