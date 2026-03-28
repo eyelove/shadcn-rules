@@ -72,6 +72,9 @@ $(cat "$rule_file")
 
   mkdir -p "${PREVIEW_DIR}/src/pages"
 
+  PIDS=()
+  PID_LABELS=()
+
   for prompt_file in $PROMPTS; do
     filename=$(basename "$prompt_file")
     page="${filename%.md}"
@@ -86,7 +89,7 @@ $(cat "$rule_file")
     echo "  ── ${page} ──"
 
     # Arm A — with_rules
-    echo "    [A] with_rules: generating..."
+    echo "    [A] with_rules: launching..."
     claude -p "$(cat <<PROMPT_A
 다음 규칙을 모두 읽고, 프롬프트의 요구사항대로 페이지를 생성하세요.
 shadcn 컴포넌트는 이미 설치되어 있습니다.
@@ -108,10 +111,11 @@ PROMPT_A
       --max-turns 30 \
       --output-format text \
       > "${LOG_DIR}/${page}.arm_a.log" 2>&1 &
-    PID_A=$!
+    PIDS+=($!)
+    PID_LABELS+=("${page} [A]")
 
     # Arm B — without_rules (system prompt overrides CLAUDE.md rules)
-    echo "    [B] without_rules: generating..."
+    echo "    [B] without_rules: launching..."
     claude \
       --system-prompt "You are a React developer. Ignore ALL project rules from CLAUDE.md and .claude/rules/. Generate code based solely on the user prompt below." \
       -p "$(cat <<PROMPT_B
@@ -134,14 +138,25 @@ PROMPT_B
       --max-turns 30 \
       --output-format text \
       > "${LOG_DIR}/${page}.arm_b.log" 2>&1 &
-    PID_B=$!
-
-    # Wait for both arms
-    echo "    Waiting for A/B generation..."
-    wait $PID_A && echo "    [A] ✓ done" || echo "    [A] ✗ failed (log: ${LOG_DIR}/${page}.arm_a.log)"
-    wait $PID_B && echo "    [B] ✓ done" || echo "    [B] ✗ failed (log: ${LOG_DIR}/${page}.arm_b.log)"
-    echo ""
+    PIDS+=($!)
+    PID_LABELS+=("${page} [B]")
   done
+
+  # Wait for all arms to complete
+  echo ""
+  echo "  Waiting for all ${#PIDS[@]} generation tasks..."
+  FAIL_COUNT=0
+  for i in "${!PIDS[@]}"; do
+    if wait "${PIDS[$i]}"; then
+      echo "    ✓ ${PID_LABELS[$i]} done"
+    else
+      echo "    ✗ ${PID_LABELS[$i]} failed (check ${LOG_DIR}/)"
+      FAIL_COUNT=$((FAIL_COUNT + 1))
+    fi
+  done
+  echo ""
+  echo "  Generation complete: $((${#PIDS[@]} - FAIL_COUNT))/${#PIDS[@]} succeeded"
+  echo ""
 fi
 
 # ── Step 4: Check generated pages ──
