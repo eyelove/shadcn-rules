@@ -1,7 +1,7 @@
 #!/bin/bash
 # Reset preview to clean state for eval.
-# If preview/ doesn't exist, scaffolds a new Vite + shadcn project.
-# If it exists, removes AI-generated files and re-initializes.
+# If preview/ doesn't exist, scaffolds from scratch.
+# If it exists, removes only AI-generated files (pages, composed, lib) and reapplies templates.
 # Usage: bash scripts/reset-preview.sh
 
 set -euo pipefail
@@ -13,66 +13,57 @@ TEMPLATES_DIR="${SCRIPT_DIR}/templates"
 
 echo "Resetting preview..."
 
-# ── Scaffold preview if it doesn't exist ──
+# ── Scaffold if preview doesn't exist ──
 if [ ! -f "${PREVIEW_DIR}/package.json" ]; then
-  echo "  preview/ not found. Scaffolding new Vite + shadcn project..."
+  echo "  preview/ not found. Scaffolding..."
   cd "$ROOT_DIR"
   npx shadcn@latest init --yes --preset nova -t vite --name preview 2>&1
   cd "${PREVIEW_DIR}" && pnpm install 2>&1
+
+  # Inject custom tokens
+  CUSTOM_TOKENS="${TEMPLATES_DIR}/custom-tokens.css"
+  if [ -f "$CUSTOM_TOKENS" ]; then
+    python3 "${SCRIPT_DIR}/inject-custom-tokens.py" \
+      "${PREVIEW_DIR}/src/index.css" \
+      "$CUSTOM_TOKENS"
+    echo "  ✓ custom tokens injected"
+  fi
+
+  # Install shadcn components used in eval
+  echo "Installing shadcn components..."
+  npx shadcn@latest add card badge input textarea select field chart separator --yes 2>&1
+  echo "  ✓ shadcn components installed"
+
+  # Patch vite.config.ts — add optimizeDeps for snapshot imports
+  # App.viewer.tsx uses import.meta.glob to load snapshot pages outside preview/.
+  # Vite's dep scanner can't resolve dependencies from those external paths.
+  # Declaring them in optimizeDeps.include forces pre-bundling without path resolution.
+  if [ -f "${PREVIEW_DIR}/vite.config.ts" ]; then
+    sed -i '' 's/plugins: \[react(), tailwindcss()\],/plugins: [react(), tailwindcss()],\
+  optimizeDeps: {\
+    include: ["react-hook-form", "lucide-react", "recharts"],\
+  },/' "${PREVIEW_DIR}/vite.config.ts"
+    echo "  ✓ vite.config.ts patched (optimizeDeps)"
+  fi
+
+  # Save checksum for ENV-04
+  find "${PREVIEW_DIR}/src/components/ui" -name "*.tsx" -exec shasum {} \; 2>/dev/null \
+    | sort | shasum | awk '{print $1}' > "${PREVIEW_DIR}/.ui-checksums"
+
   echo "  ✓ preview scaffolded"
 fi
 
-# ── Remove AI-generated directories ──
-rm -rf "${PREVIEW_DIR}/src/components"
+# ── Remove AI-generated files only ──
+rm -rf "${PREVIEW_DIR}/src/pages"
+rm -rf "${PREVIEW_DIR}/src/components/composed"
 rm -rf "${PREVIEW_DIR}/src/lib"
 rm -rf "${PREVIEW_DIR}/src/hooks"
-rm -rf "${PREVIEW_DIR}/src/pages"
+echo "  ✓ AI-generated files removed"
 
-# Remove old App.css (Vite default)
-rm -f "${PREVIEW_DIR}/src/App.css"
-
-# Remove shadcn checksum file
-rm -f "${PREVIEW_DIR}/.ui-checksums"
-
-# Restore empty shell App
+# ── Reapply eval templates ──
 cp "${TEMPLATES_DIR}/App.shell.tsx" "${PREVIEW_DIR}/src/App.tsx"
-
-# Copy viewer template
 cp "${TEMPLATES_DIR}/App.viewer.tsx" "${PREVIEW_DIR}/src/App.viewer.tsx"
-
-# Reset index.css to Tailwind-only (clean slate for shadcn init)
-cat > "${PREVIEW_DIR}/src/index.css" << 'CSSEOF'
-@import "tailwindcss";
-CSSEOF
-
-echo "  ✓ preview reset to clean state"
-
-# ── shadcn re-init (force on existing project) ──
-echo "Running shadcn init..."
-cd "${PREVIEW_DIR}"
-npx shadcn@latest init --yes --force --no-reinstall --preset nova -t vite 2>&1
-echo "  ✓ shadcn initialized"
-
-# ── Inject custom tokens ──
-CUSTOM_TOKENS="${TEMPLATES_DIR}/custom-tokens.css"
-
-if [ ! -f "$CUSTOM_TOKENS" ]; then
-  echo "  ⚠ custom-tokens.css not found, skipping token injection"
-else
-  python3 "${SCRIPT_DIR}/inject-custom-tokens.py" \
-    "${PREVIEW_DIR}/src/index.css" \
-    "$CUSTOM_TOKENS"
-  echo "  ✓ custom tokens injected"
-fi
-
-# ── Install all shadcn components used in eval prompts ──
-echo "Installing shadcn components..."
-npx shadcn@latest add card badge input textarea select field chart separator --yes 2>&1
-echo "  ✓ shadcn components installed"
-
-# Save checksum of shadcn ui components for ENV-04
-find "${PREVIEW_DIR}/src/components/ui" -name "*.tsx" -exec shasum {} \; 2>/dev/null \
-  | sort | shasum | awk '{print $1}' > "${PREVIEW_DIR}/.ui-checksums"
+echo "  ✓ eval templates applied"
 
 echo ""
 echo "Preview ready. Run page prompts next."
