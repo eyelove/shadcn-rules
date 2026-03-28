@@ -95,11 +95,53 @@ Chart cards wrap a single visualization with an optional period selector in the 
 </Card>
 ```
 
+**Period selector in CardAction — Select vs Date Range Picker:**
+
+기본값은 Select (고정 기간: 7d/30d/90d). 사용자가 직접 날짜 범위를 지정해야 하면 Date Range Picker를 사용한다.
+
+```tsx
+// 기본값 — 위 CARD-02 예제의 Select 패턴을 따른다
+
+// 커스텀 범위 — Date Range Picker with Presets
+<CardAction>
+  <Popover>
+    <PopoverTrigger asChild>
+      <Button variant="outline" className="w-[260px] justify-start text-left font-normal">
+        <CalendarIcon className="mr-2 h-4 w-4" />
+        {dateRange?.from ? (
+          dateRange.to ? (
+            <>{formatDate(dateRange.from, { locale: "ko-KR" })} - {formatDate(dateRange.to, { locale: "ko-KR" })}</>
+          ) : formatDate(dateRange.from, { locale: "ko-KR" })
+        ) : <span className="text-muted-foreground">기간 선택</span>}
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent className="w-auto p-0" align="start">
+      <div className="flex flex-col space-y-2 p-2">
+        <Select onValueChange={(value) => handlePreset(value)}>
+          <SelectTrigger><SelectValue placeholder="Select preset" /></SelectTrigger>
+          <SelectContent position="popper">
+            <SelectItem value="7d">Last 7 days</SelectItem>
+            <SelectItem value="30d">Last 30 days</SelectItem>
+            <SelectItem value="90d">Last 90 days</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="rounded-md border">
+          <Calendar mode="range" selected={dateRange} onSelect={setDateRange} numberOfMonths={2} initialFocus />
+        </div>
+      </div>
+    </PopoverContent>
+  </Popover>
+</CardAction>
+```
+
+// WHY: 고정 기간(7d/30d)만 필요하면 Select가 간결하다. 자유 범위 지정이 필요하면 Date Range Picker.
+// 프리셋 Select와 Calendar이 같은 state를 공유하므로 프리셋 선택 시 달력도 업데이트된다.
+
 **Rules:**
 - Chart colors are defined in `chartConfig` and referenced as `var(--color-KEY)` on chart elements
 - `ChartContainer` MUST have `min-h-[VALUE]` or `aspect-*` for responsive sizing
 - `accessibilityLayer` on the chart root for keyboard/screen reader support
-- Period selector (Select or ToggleGroup) goes in CardAction, not above the chart
+- Period selector (Select, ToggleGroup, or Date Range Picker) goes in CardAction, not above the chart
 - Use `<ChartTooltip content={<ChartTooltipContent />} />` — NEVER raw Recharts `<Tooltip>` or `contentStyle`
 - Use `<ChartLegend content={<ChartLegendContent />} />` when a legend is needed
 - Axis/Grid styling is handled by `ChartContainer` internally — do NOT pass `stroke` props to `CartesianGrid`, `XAxis`, `YAxis`
@@ -225,9 +267,34 @@ For full DataTable column definitions and render function rules, see: @.claude/r
 ### CARD-04 — Form Card
 
 Form cards embed a form inside a Card, typically on settings or edit pages.
-`<form>` gets an `id` attribute; submit button uses `form="form-id"` to link from CardFooter.
 
-Full form hierarchy, Field patterns, and code examples: @.claude/rules/fields.md
+```tsx
+<Card>
+  <CardHeader>
+    <CardTitle>Campaign Settings</CardTitle>
+    <CardDescription>Update campaign configuration</CardDescription>
+  </CardHeader>
+  <CardContent>
+    <form id="campaign-form" onSubmit={handleSubmit}>
+      {/* form 내부 패턴: @.claude/rules/fields.md FIELD-01~07 */}
+    </form>
+  </CardContent>
+  <CardFooter className="gap-2">
+    <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
+    <Button type="submit" form="campaign-form">Save</Button>
+  </CardFooter>
+</Card>
+```
+
+**Rules:**
+- `<form>`에 `id` 부여, submit 버튼은 `form="form-id"`로 CardFooter에서 연결
+- CardFooter에 `className="gap-2"` 필수 (shadcn CardFooter에 기본 gap 없음)
+- 보조 액션은 `variant="outline"`, 주요 액션은 default variant
+- 3개 이상 버튼 허용 (예: Cancel + Save Draft + Publish)
+- form 내부 구조(FieldGroup, FieldSet, Field 등)는 @.claude/rules/fields.md 참조
+
+// WHY: Card가 폼의 시각적 경계를 제공한다. CardFooter가 버튼을 CardContent 밖에 고정한다.
+// form id linking으로 버튼이 form 엘리먼트 안에 있지 않아도 submit이 동작한다.
 
 ---
 
