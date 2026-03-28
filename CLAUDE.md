@@ -30,7 +30,7 @@ Follow these rules for every file you touch.
 - **Tokens**: Use CSS custom property tokens for ALL color, spacing, and radius values. Never hardcode hex, rgb, or oklch literals.
   // WHY: Hardcoded values break theming and make dark mode impossible to maintain.
 
-- **No inline styles**: Never use `style={{}}` on any element. Exception: third-party library API props (e.g., Recharts Tooltip contentStyle) — but values MUST still be CSS custom property tokens.
+- **No inline styles**: Never use `style={{}}` on any element. No exceptions. Use shadcn's `ChartTooltip` + `ChartTooltipContent` instead of raw Recharts Tooltip with `contentStyle`.
   // WHY: Inline styles bypass the token system and are impossible to audit automatically.
 
 - **Formatting**: Use locale-aware format utility functions for all numbers, currency, and percentages. See `formatting.md`.
