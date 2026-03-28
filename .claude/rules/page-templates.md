@@ -279,7 +279,7 @@ import { ArrowLeftIcon } from "lucide-react"
         </FieldGroup>
       </form>
     </CardContent>
-    <CardFooter className="border-t">
+    <CardFooter>
       <Button variant="outline" type="button" onClick={handleCancel}>Cancel</Button>
       <Button type="submit" form="campaign-form">Save</Button>
     </CardFooter>

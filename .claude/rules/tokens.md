@@ -65,25 +65,23 @@ NEVER use inline `style={{ fontSize: "..." }}` or `style={{ fontWeight: "..." }}
 
 ## Spacing
 
-대시보드 밀집형(dense) 기본값. 4px 단위(Tailwind 숫자 1 = 4px) 기반.
-프로젝트별 설정이 없으면 이 테이블을 따른다.
-// WHY: 대시보드는 한 화면에 많은 데이터를 보여야 하므로 여유형(p-6, gap-6)보다
-// 밀집형(p-4, gap-4)이 정보 밀도와 비교 효율에서 유리하다.
+Tailwind의 4px 단위 spacing scale만 사용한다. 어디에 얼마만큼의 간격을 넣을지는 디자인 맥락에 맞게 자유롭게 판단한다.
+// WHY: 4px 단위를 지키면 시각적 리듬이 유지된다. 구체적 배치는 AI의 디자인 판단에 맡긴다.
 
-| 역할 | 기본값 | px | 여유형 오버라이드 |
-|------|--------|-----|-----------------|
-| 페이지 루트 패딩 | `p-4` | 16 | `p-6` (24) |
-| 페이지 섹션 간 간격 | `gap-4` | 16 | `gap-6` (24) |
-| 카드 내부 패딩 | `p-4` | 16 | `p-6` (24) |
-| 카드 내 요소 간 간격 | `gap-3` | 12 | `gap-4` (16) |
-| 인라인 요소 간격 (버튼 그룹, 필터 toolbar) | `gap-2` | 8 | |
-| FieldSet 내부 필드 간 간격 | `gap-3` | 12 | `gap-4` (16) |
-| 테이블 필터 toolbar 하단 여백 | `pb-4` | 16 | |
+**허용하는 단위:**
+`gap-1`(4px) · `gap-2`(8px) · `gap-3`(12px) · `gap-4`(16px) · `gap-6`(24px)
+`p-1` ~ `p-6` · `m-1` ~ `m-6` · `space-y-*` · `space-x-*`
 
-NEVER use `style={{ padding: "..." }}` or `style={{ marginTop: "..." }}`.
-// WHY: Tailwind의 spacing scale은 이미 4px 단위. inline style은 이 체계를 우회한다.
+**고정값** (사용자가 직접 변경을 요청하지 않는 한 이 값을 사용):
 
-프로젝트별 여유형 간격이 필요하면 CLAUDE.md 또는 프로젝트 토큰 파일에서 기본값을 재정의한다.
+| 역할 | 값 |
+|------|-----|
+| 페이지 루트 래퍼 | `div.flex.flex-col.gap-4.p-4` |
+| 페이지 헤더 | div (Card 아님), `h1.text-xl.font-semibold` + `p.text-sm.text-muted-foreground` |
+
+**금지:**
+- `style={{ padding/margin/gap: "..." }}` — inline spacing
+- Tailwind scale 밖의 임의 값 (`gap-[13px]`, `p-[7px]`)
 
 ## Forbidden Patterns
 
