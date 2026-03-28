@@ -11,9 +11,17 @@ set -euo pipefail
 # --- Arguments ---
 INPUT="${1:?Usage: score-report.sh <results.jsonl | -> [expected_violations.txt]}"
 EXPECTED="${2:-}"
+OUTPUT_DIR="${3:-}"
+BUILD_PASS="${4:-true}"
 TODAY=$(date +%Y-%m-%d)
-REPORT_DIR="tests/reports"
-REPORT_FILE="${REPORT_DIR}/${TODAY}-report.md"
+
+if [ -n "$OUTPUT_DIR" ]; then
+  REPORT_DIR="$OUTPUT_DIR"
+  REPORT_FILE="${OUTPUT_DIR}/report.md"
+else
+  REPORT_DIR="tests/reports"
+  REPORT_FILE="${REPORT_DIR}/${TODAY}-report.md"
+fi
 
 # --- Temp files ---
 TMPFILE=$(mktemp /tmp/score-report-input.XXXXXX)
@@ -324,3 +332,49 @@ mkdir -p "$REPORT_DIR"
 } > "$REPORT_FILE"
 
 echo "Report saved to ${REPORT_FILE}"
+
+# Generate meta.json when output dir is specified
+if [ -n "$OUTPUT_DIR" ]; then
+  SNAP_ID=$(basename "$OUTPUT_DIR")
+  SNAP_DATE=$(echo "$SNAP_ID" | sed 's/-run[0-9]*$//')
+  SNAP_RUN=$(echo "$SNAP_ID" | grep -oE '[0-9]+$' || echo "1")
+
+  # Build scores JSON from summary
+  SCORES_JSON="{"
+  first=true
+  while IFS='	' read -r fname pass fail score; do
+    page=$(echo "$fname" | sed 's/\.tsx$//')
+    if [ "$first" = true ]; then first=false; else SCORES_JSON="${SCORES_JSON},"; fi
+    SCORES_JSON="${SCORES_JSON}\"${page}\":{\"pass\":${pass},\"fail\":${fail},\"score\":${score}}"
+  done < "$TMP_SUMMARY"
+  SCORES_JSON="${SCORES_JSON}}"
+
+  # Build prompts array
+  PROMPTS_JSON="["
+  first=true
+  while IFS='	' read -r fname pass fail score; do
+    page=$(echo "$fname" | sed 's/\.tsx$//')
+    if [ "$first" = true ]; then first=false; else PROMPTS_JSON="${PROMPTS_JSON},"; fi
+    PROMPTS_JSON="${PROMPTS_JSON}\"${page}\""
+  done < "$TMP_SUMMARY"
+  PROMPTS_JSON="${PROMPTS_JSON}]"
+
+  DETECTION_RATE_VAL="${rate:-0}"
+
+  cat > "${OUTPUT_DIR}/meta.json" << METAEOF
+{
+  "id": "${SNAP_ID}",
+  "date": "${SNAP_DATE}",
+  "run": ${SNAP_RUN},
+  "prompts": ${PROMPTS_JSON},
+  "scores": ${SCORES_JSON},
+  "detectionRate": ${DETECTION_RATE_VAL},
+  "buildPass": ${BUILD_PASS}
+}
+METAEOF
+
+  # Copy JSONL as report.json
+  cp "$TMPFILE" "${OUTPUT_DIR}/report.json"
+
+  echo "Meta saved to ${OUTPUT_DIR}/meta.json"
+fi
