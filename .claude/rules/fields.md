@@ -366,22 +366,18 @@ NEVER use Input, Select, Textarea, or Checkbox outside a Field wrapper in form c
 // WHY: Field provides label association, description, error display, and validation state. Bare inputs skip all of this.
 
 ```tsx
-// FORBIDDEN — bare Input
-<CardContent>
-  <Input placeholder="Campaign name" />
-</CardContent>
+// FORBIDDEN — bare Input (Field 래핑 없음)
+<Input placeholder="Campaign name" />
 
-// CORRECT
-<CardContent>
-  <form id="my-form">
-    <FieldGroup>
-      <Field>
-        <FieldLabel>Campaign Name</FieldLabel>
-        <Input placeholder="Campaign name" />
-      </Field>
-    </FieldGroup>
-  </form>
-</CardContent>
+// CORRECT — Field 안에 배치
+<form id="my-form">
+  <FieldGroup>
+    <Field>
+      <FieldLabel>Campaign Name</FieldLabel>
+      <Input placeholder="Campaign name" />
+    </Field>
+  </FieldGroup>
+</form>
 ```
 
 ### Button Variant 미구분
