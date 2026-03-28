@@ -1,66 +1,74 @@
 #!/bin/bash
-# Reset preview to clean Vite + Tailwind state, then run shadcn init.
-# Removes AI-generated files, restores App.shell.tsx, initializes shadcn base.
+# Reset preview to clean state for eval.
+# If preview/ doesn't exist, scaffolds from scratch.
+# If it exists, removes only AI-generated files (pages, composed, lib) and reapplies templates.
 # Usage: bash scripts/reset-preview.sh
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-PREVIEW_DIR="${SCRIPT_DIR}/../preview"
+ROOT_DIR="${SCRIPT_DIR}/.."
+PREVIEW_DIR="${ROOT_DIR}/preview"
 TEMPLATES_DIR="${SCRIPT_DIR}/templates"
 
 echo "Resetting preview..."
 
-# Remove AI-generated directories
-rm -rf "${PREVIEW_DIR}/src/components"
-rm -rf "${PREVIEW_DIR}/src/lib"
-rm -rf "${PREVIEW_DIR}/src/hooks"
-rm -rf "${PREVIEW_DIR}/src/pages"
+# ── Scaffold if preview doesn't exist ──
+if [ ! -f "${PREVIEW_DIR}/package.json" ]; then
+  echo "  preview/ not found. Scaffolding..."
+  cd "$ROOT_DIR"
+  npx shadcn@latest init --yes --preset nova -t vite --name preview 2>&1
+  cd "${PREVIEW_DIR}" && pnpm install 2>&1
 
-# Remove old App.css (Vite default)
-rm -f "${PREVIEW_DIR}/src/App.css"
+  # Inject custom tokens
+  CUSTOM_TOKENS="${TEMPLATES_DIR}/custom-tokens.css"
+  if [ -f "$CUSTOM_TOKENS" ]; then
+    python3 "${SCRIPT_DIR}/inject-custom-tokens.py" \
+      "${PREVIEW_DIR}/src/index.css" \
+      "$CUSTOM_TOKENS"
+    echo "  ✓ custom tokens injected"
+  fi
 
-# Remove shadcn checksum file
-rm -f "${PREVIEW_DIR}/.ui-checksums"
+  # Install shadcn components used in eval
+  echo "Installing shadcn components..."
+  npx shadcn@latest add card badge input textarea select field chart separator --yes 2>&1
+  echo "  ✓ shadcn components installed"
 
-# Restore empty shell App
-cp "${TEMPLATES_DIR}/App.shell.tsx" "${PREVIEW_DIR}/src/App.tsx"
+  # Patch vite.config.ts — add optimizeDeps for snapshot imports
+  # App.viewer.tsx uses import.meta.glob to load snapshot pages outside preview/.
+  # Vite's dep scanner can't resolve dependencies from those external paths.
+  # Declaring them in optimizeDeps.include forces pre-bundling without path resolution.
+  if [ -f "${PREVIEW_DIR}/vite.config.ts" ]; then
+    sed -i '' 's/plugins: \[react(), tailwindcss()\],/plugins: [react(), tailwindcss()],\
+  optimizeDeps: {\
+    include: ["react-hook-form", "lucide-react", "recharts"],\
+  },/' "${PREVIEW_DIR}/vite.config.ts"
+    echo "  ✓ vite.config.ts patched (optimizeDeps)"
+  fi
 
-# Reset index.css to Tailwind-only (clean slate for shadcn init)
-cat > "${PREVIEW_DIR}/src/index.css" << 'CSSEOF'
-@import "tailwindcss";
-CSSEOF
+  # Save checksum for ENV-04
+  find "${PREVIEW_DIR}/src/components/ui" -name "*.tsx" -exec shasum {} \; 2>/dev/null \
+    | sort | shasum | awk '{print $1}' > "${PREVIEW_DIR}/.ui-checksums"
 
-echo "  ✓ preview reset to clean state"
-
-# ── shadcn init ──
-echo "Running shadcn init..."
-cd "${PREVIEW_DIR}"
-npx shadcn@latest init --yes --force --no-reinstall --preset nova -t vite 2>&1
-echo "  ✓ shadcn initialized"
-
-# ── Inject custom tokens ──
-CUSTOM_TOKENS="${TEMPLATES_DIR}/custom-tokens.css"
-
-if [ ! -f "$CUSTOM_TOKENS" ]; then
-  echo "  ⚠ custom-tokens.css not found, skipping token injection"
-  exit 0
+  echo "  ✓ preview scaffolded"
 fi
 
-python3 "${SCRIPT_DIR}/inject-custom-tokens.py" \
-  "${PREVIEW_DIR}/src/index.css" \
-  "$CUSTOM_TOKENS"
+# ── Remove AI-generated files only ──
+rm -rf "${PREVIEW_DIR}/src/pages"
+rm -rf "${PREVIEW_DIR}/src/components/composed"
+rm -rf "${PREVIEW_DIR}/src/lib"
+rm -rf "${PREVIEW_DIR}/src/hooks"
+echo "  ✓ AI-generated files removed"
 
-echo "  ✓ custom tokens injected"
-
-# ── Install all shadcn components used in eval prompts ──
-echo "Installing shadcn components..."
-npx shadcn@latest add card badge input textarea select field chart separator --yes 2>&1
-echo "  ✓ shadcn components installed"
-
-# Save checksum of shadcn ui components for ENV-04
-find "${PREVIEW_DIR}/src/components/ui" -name "*.tsx" -exec shasum {} \; 2>/dev/null \
-  | sort | shasum | awk '{print $1}' > "${PREVIEW_DIR}/.ui-checksums"
+# ── Reapply eval templates ──
+cp "${TEMPLATES_DIR}/App.shell.tsx" "${PREVIEW_DIR}/src/App.tsx"
+cp "${TEMPLATES_DIR}/App.viewer.tsx" "${PREVIEW_DIR}/src/App.viewer.tsx"
+mkdir -p "${PREVIEW_DIR}/src/lib"
+cp "${TEMPLATES_DIR}/utils.ts" "${PREVIEW_DIR}/src/lib/utils.ts"
+cp "${TEMPLATES_DIR}/format.ts" "${PREVIEW_DIR}/src/lib/format.ts"
+mkdir -p "${PREVIEW_DIR}/src/components/composed"
+cp -r "${TEMPLATES_DIR}/composed/" "${PREVIEW_DIR}/src/components/composed/"
+echo "  ✓ eval templates applied"
 
 echo ""
 echo "Preview ready. Run page prompts next."

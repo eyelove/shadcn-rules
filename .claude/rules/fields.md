@@ -76,7 +76,7 @@ import { Button } from "@/components/ui/button"
       </FieldGroup>
     </form>
   </CardContent>
-  <CardFooter className="border-t">
+  <CardFooter>
     <Button variant="outline" type="button" onClick={handleCancel}>Cancel</Button>
     <Button type="submit" form="campaign-form">Save</Button>
   </CardFooter>
@@ -138,7 +138,7 @@ import { Button } from "@/components/ui/button"
       </FieldGroup>
     </form>
   </CardContent>
-  <CardFooter className="border-t">
+  <CardFooter>
     <Button variant="outline" type="button" onClick={handleCancel}>Cancel</Button>
     <Button type="submit" form="settings-form">Save</Button>
   </CardFooter>
@@ -226,7 +226,7 @@ function CampaignForm() {
           </FieldGroup>
         </form>
       </CardContent>
-      <CardFooter className="border-t">
+      <CardFooter>
         <Button variant="outline" type="button" onClick={handleCancel}>Cancel</Button>
         <Button type="submit" form="campaign-form">Save</Button>
       </CardFooter>
@@ -279,13 +279,12 @@ import { Switch } from "@/components/ui/switch"
 - 주요 액션(Submit, Delete 등)은 `variant`로 시각적 구분 (default for submit, destructive for delete)
 - 보조 액션(Cancel, Reset 등)은 `variant="outline"` 사용
 - Submit button uses `form="form-id"` attribute to link to the form in CardContent
-- CardFooter gets `className="border-t"` for visual separation
 - 버튼 배치(순서, 좌/우/중앙 정렬)는 프로젝트 컨벤션에 따라 자유롭게 설정 가능
 - 3개 이상 버튼도 허용 (예: Cancel + Save Draft + Publish)
 
 **기본값** (특별한 지시 없으면):
 ```tsx
-<CardFooter className="border-t">
+<CardFooter>
   <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
   <Button type="submit" form="campaign-form">Save</Button>
 </CardFooter>
@@ -321,7 +320,7 @@ NEVER render a form without a Card wrapper in dashboard pages.
       </FieldGroup>
     </form>
   </CardContent>
-  <CardFooter className="border-t">
+  <CardFooter>
     <Button type="submit" form="my-form">Save</Button>
   </CardFooter>
 </Card>
@@ -394,14 +393,14 @@ NEVER use Input, Select, Textarea, or Checkbox outside a Field wrapper in form c
       </FieldGroup>
     </form>
   </CardContent>
-  <CardFooter className="border-t">...</CardFooter>
+  <CardFooter>...</CardFooter>
 </Card>
 ```
 
 ### Submit Button Inside CardContent
 
 NEVER place the submit button inside CardContent. It belongs in CardFooter.
-// WHY: CardFooter provides consistent button placement at the bottom of the Card with border-t separation.
+// WHY: CardFooter provides consistent button placement at the bottom of the Card.
 
 ```tsx
 // FORBIDDEN — submit inside CardContent
@@ -418,7 +417,7 @@ NEVER place the submit button inside CardContent. It belongs in CardFooter.
     <FieldGroup>...</FieldGroup>
   </form>
 </CardContent>
-<CardFooter className="border-t">
+<CardFooter>
   <Button type="submit" form="my-form">Save</Button>
 </CardFooter>
 ```
@@ -429,13 +428,13 @@ NEVER place the submit button inside CardContent. It belongs in CardFooter.
 
 ```tsx
 // FORBIDDEN — 모든 버튼이 같은 variant
-<CardFooter className="border-t">
+<CardFooter>
   <Button type="button">Cancel</Button>
   <Button type="submit" form="my-form">Save</Button>
 </CardFooter>
 
 // CORRECT — variant로 역할 구분 (기본값: 보조 → 주요 순서)
-<CardFooter className="border-t">
+<CardFooter>
   <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
   <Button type="submit" form="my-form">Save</Button>
 </CardFooter>

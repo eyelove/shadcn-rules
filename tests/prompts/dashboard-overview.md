@@ -1,8 +1,6 @@
 ---
-type: normal
 page: dashboard-overview
 template: PAGE-04
-expected_violations: 0
 expected_ui:
   - card
   - button
@@ -21,7 +19,6 @@ expected_lib:
 # Dashboard Overview 페이지 생성
 
 아래 요구사항에 맞는 대시보드 개요 페이지를 작성하세요.
-프로젝트의 `.claude/rules/` 디렉토리에 있는 모든 규칙을 준수해야 합니다.
 
 ## 요구사항
 
@@ -47,8 +44,6 @@ expected_lib:
 - New Campaign 버튼
 
 ## 출력
-- 파일 위치: `preview/src/pages/dashboard-overview.normal.tsx`
-- 필요한 shadcn 컴포넌트를 직접 설치하세요 (`npx shadcn add ...`)
 - Composed 컴포넌트(DataTable, KpiCard)가 없으면 `preview/src/components/composed/`에 생성하세요
 - `@/lib/format` 유틸리티가 없으면 `preview/src/lib/format.ts`에 생성하세요
 - App.tsx에 라우팅을 연결하세요

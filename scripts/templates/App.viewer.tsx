@@ -12,11 +12,23 @@ const metaModules = import.meta.glob(
   { eager: true }
 ) as Record<string, { default: Record<string, unknown> }>
 
+interface ArmScore {
+  pass: number
+  fail: number
+  score: number
+}
+
+interface PageScore {
+  with_rules: ArmScore
+  without_rules: ArmScore
+  delta: number
+}
+
 interface SnapshotMeta {
   id: string
-  scores: Record<string, { pass: number; fail: number; score: number }>
+  mode: string
+  scores: Record<string, PageScore>
   buildPass: boolean
-  detectionRate: number
 }
 
 interface SnapshotInfo {
@@ -28,7 +40,6 @@ interface SnapshotInfo {
 function parseSnapshots(): Map<string, SnapshotInfo> {
   const map = new Map<string, SnapshotInfo>()
 
-  // Parse page modules
   for (const [path, loader] of Object.entries(snapshotModules)) {
     const match = path.match(/snapshots\/([^/]+)\/samples\/src\/pages\/(.+)\.tsx$/)
     if (!match) continue
@@ -40,7 +51,6 @@ function parseSnapshots(): Map<string, SnapshotInfo> {
     map.get(snapId)!.pages[pageName] = loader
   }
 
-  // Parse meta modules (eager loaded)
   for (const [path, mod] of Object.entries(metaModules)) {
     const match = path.match(/snapshots\/([^/]+)\/meta\.json$/)
     if (!match) continue
@@ -57,19 +67,55 @@ function parseSnapshots(): Map<string, SnapshotInfo> {
 function getPageGroups(snap: SnapshotInfo): string[] {
   const groups = new Set<string>()
   for (const p of Object.keys(snap.pages)) {
-    groups.add(p.replace(/\.(normal|adversarial)$/, ""))
+    groups.add(p.replace(/\.(with_rules|without_rules)$/, ""))
   }
   return Array.from(groups).sort()
 }
 
-type CompareMode = "normal-vs-adversarial" | "run-vs-run"
+type CompareMode = "ab" | "run-vs-run"
+type Arm = "with_rules" | "without_rules"
 
-function ScoreBar({ meta, pageName }: { meta: SnapshotMeta | null; pageName: string }) {
+function getVerdict(delta: number): string {
+  if (delta >= 20) return "EFFECTIVE"
+  if (delta >= 5) return "MARGINAL"
+  if (delta >= 0) return "NO DIFF"
+  return "NEGATIVE"
+}
+
+function getVerdictColor(delta: number): string {
+  if (delta >= 20) return "text-green-600"
+  if (delta >= 5) return "text-yellow-600"
+  if (delta >= 0) return "text-muted-foreground"
+  return "text-red-600"
+}
+
+function ScoreBar({ meta, pageName, arm }: { meta: SnapshotMeta | null; pageName: string; arm?: Arm }) {
   if (!meta) return <span>Score: —</span>
-  const s = meta.scores?.[pageName]
+
+  const pageScore = meta.scores?.[pageName]
+  if (!pageScore) return <span>Score: —</span>
+
+  if (arm) {
+    const s = pageScore[arm]
+    if (!s) return <span>Score: —</span>
+    return (
+      <>
+        <span>Score: {s.score}% ({s.pass}/{s.pass + s.fail})</span>
+        <span>Build: {meta.buildPass ? "PASS" : "FAIL"}</span>
+      </>
+    )
+  }
+
+  // A/B summary
+  const delta = pageScore.delta
+  const verdict = getVerdict(delta)
   return (
     <>
-      <span>Score: {s ? `${s.score}% (${s.pass}/${s.pass + s.fail})` : "—"}</span>
+      <span>A: {pageScore.with_rules.score}%</span>
+      <span>B: {pageScore.without_rules.score}%</span>
+      <span className={getVerdictColor(delta)}>
+        delta: {delta >= 0 ? "+" : ""}{delta}% ({verdict})
+      </span>
       <span>Build: {meta.buildPass ? "PASS" : "FAIL"}</span>
     </>
   )
@@ -77,12 +123,16 @@ function ScoreBar({ meta, pageName }: { meta: SnapshotMeta | null; pageName: str
 
 function App() {
   const [snapshots] = useState(() => parseSnapshots())
-  const [mode, setMode] = useState<CompareMode>("normal-vs-adversarial")
+  const [mode, setMode] = useState<CompareMode>("ab")
+  // A/B mode state
   const [selectedSnap, setSelectedSnap] = useState("")
   const [selectedPage, setSelectedPage] = useState("")
+  // Run vs Run mode state
   const [leftSnap, setLeftSnap] = useState("")
   const [rightSnap, setRightSnap] = useState("")
   const [runPage, setRunPage] = useState("")
+  const [runArm, setRunArm] = useState<Arm>("with_rules")
+  // Loaded components
   const [LeftComp, setLeftComp] = useState<ComponentType | null>(null)
   const [RightComp, setRightComp] = useState<ComponentType | null>(null)
 
@@ -119,39 +169,38 @@ function App() {
 
   // Load components on selection change
   useEffect(() => {
-    if (mode === "normal-vs-adversarial") {
+    if (mode === "ab") {
       const snap = snapshots.get(selectedSnap)
       if (!snap || !selectedPage) { setLeftComp(null); setRightComp(null); return }
 
-      const normalKey = `${selectedPage}.normal`
-      const advKey = `${selectedPage}.adversarial`
+      const withKey = `${selectedPage}.with_rules`
+      const withoutKey = `${selectedPage}.without_rules`
 
-      setLeftComp(snap.pages[normalKey] ? () => lazy(snap.pages[normalKey]) : null)
-      setRightComp(snap.pages[advKey] ? () => lazy(snap.pages[advKey]) : null)
+      setLeftComp(snap.pages[withKey] ? () => lazy(snap.pages[withKey]) : null)
+      setRightComp(snap.pages[withoutKey] ? () => lazy(snap.pages[withoutKey]) : null)
     } else {
       const lSnap = snapshots.get(leftSnap)
       const rSnap = snapshots.get(rightSnap)
+      const pageKey = `${runPage}.${runArm}`
 
-      setLeftComp(lSnap?.pages[runPage] ? () => lazy(lSnap.pages[runPage]) : null)
-      setRightComp(rSnap?.pages[runPage] ? () => lazy(rSnap.pages[runPage]) : null)
+      // For run-vs-run with raw page name (may already include arm suffix)
+      const lKey = lSnap?.pages[pageKey] ? pageKey : runPage
+      const rKey = rSnap?.pages[pageKey] ? pageKey : runPage
+
+      setLeftComp(lSnap?.pages[lKey] ? () => lazy(lSnap.pages[lKey]) : null)
+      setRightComp(rSnap?.pages[rKey] ? () => lazy(rSnap.pages[rKey]) : null)
     }
-  }, [mode, selectedSnap, selectedPage, leftSnap, rightSnap, runPage])
+  }, [mode, selectedSnap, selectedPage, leftSnap, rightSnap, runPage, runArm])
 
   const currentSnap = snapshots.get(selectedSnap)
   const pageGroups = currentSnap ? getPageGroups(currentSnap) : []
   const allPageNames = Array.from(
-    new Set(Array.from(snapshots.values()).flatMap((s) => Object.keys(s.pages)))
+    new Set(
+      Array.from(snapshots.values())
+        .flatMap((s) => Object.keys(s.pages))
+        .map((p) => p.replace(/\.(with_rules|without_rules)$/, ""))
+    )
   ).sort()
-
-  const leftMeta = mode === "normal-vs-adversarial"
-    ? snapshots.get(selectedSnap)?.meta ?? null
-    : snapshots.get(leftSnap)?.meta ?? null
-  const rightMeta = mode === "normal-vs-adversarial"
-    ? snapshots.get(selectedSnap)?.meta ?? null
-    : snapshots.get(rightSnap)?.meta ?? null
-
-  const leftPageName = mode === "normal-vs-adversarial" ? `${selectedPage}.normal` : runPage
-  const rightPageName = mode === "normal-vs-adversarial" ? `${selectedPage}.adversarial` : runPage
 
   const Loading = (
     <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
@@ -184,11 +233,11 @@ function App() {
           onChange={(e) => setMode(e.target.value as CompareMode)}
           className="text-sm border border-border rounded px-2 py-1 bg-background"
         >
-          <option value="normal-vs-adversarial">Normal vs Adversarial</option>
+          <option value="ab">A/B (with rules vs without)</option>
           <option value="run-vs-run">Run vs Run</option>
         </select>
 
-        {mode === "normal-vs-adversarial" ? (
+        {mode === "ab" ? (
           <>
             <select
               value={selectedSnap}
@@ -230,6 +279,14 @@ function App() {
             >
               {allPageNames.map((p) => <option key={p} value={p}>{p}</option>)}
             </select>
+            <select
+              value={runArm}
+              onChange={(e) => setRunArm(e.target.value as Arm)}
+              className="text-sm border border-border rounded px-2 py-1 bg-background"
+            >
+              <option value="with_rules">with_rules</option>
+              <option value="without_rules">without_rules</option>
+            </select>
           </>
         )}
       </header>
@@ -238,8 +295,12 @@ function App() {
       <div className="flex flex-1 overflow-hidden">
         {/* Left panel */}
         <div className="flex-1 flex flex-col border-r border-border overflow-hidden">
-          <div className="px-3 py-2 border-b border-border bg-muted/30 text-xs text-muted-foreground">
-            {mode === "normal-vs-adversarial" ? leftPageName : `${leftSnap} / ${runPage}`}
+          <div className="px-3 py-2 border-b border-border bg-muted/30 text-xs text-muted-foreground font-medium">
+            {mode === "ab" ? (
+              <>{selectedPage} — <span className="text-foreground">A (with_rules)</span></>
+            ) : (
+              <>{leftSnap} / {runPage}.{runArm}</>
+            )}
           </div>
           <div className="flex-1 overflow-y-auto">
             <Suspense fallback={Loading}>
@@ -247,14 +308,22 @@ function App() {
             </Suspense>
           </div>
           <div className="px-3 py-2 border-t border-border bg-muted/30 text-xs flex gap-4">
-            <ScoreBar meta={leftMeta} pageName={leftPageName} />
+            {mode === "ab" ? (
+              <ScoreBar meta={currentSnap?.meta ?? null} pageName={selectedPage} arm="with_rules" />
+            ) : (
+              <ScoreBar meta={snapshots.get(leftSnap)?.meta ?? null} pageName={runPage} arm={runArm} />
+            )}
           </div>
         </div>
 
         {/* Right panel */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="px-3 py-2 border-b border-border bg-muted/30 text-xs text-muted-foreground">
-            {mode === "normal-vs-adversarial" ? rightPageName : `${rightSnap} / ${runPage}`}
+          <div className="px-3 py-2 border-b border-border bg-muted/30 text-xs text-muted-foreground font-medium">
+            {mode === "ab" ? (
+              <>{selectedPage} — <span className="text-foreground">B (without_rules)</span></>
+            ) : (
+              <>{rightSnap} / {runPage}.{runArm}</>
+            )}
           </div>
           <div className="flex-1 overflow-y-auto">
             <Suspense fallback={Loading}>
@@ -262,10 +331,21 @@ function App() {
             </Suspense>
           </div>
           <div className="px-3 py-2 border-t border-border bg-muted/30 text-xs flex gap-4">
-            <ScoreBar meta={rightMeta} pageName={rightPageName} />
+            {mode === "ab" ? (
+              <ScoreBar meta={currentSnap?.meta ?? null} pageName={selectedPage} arm="without_rules" />
+            ) : (
+              <ScoreBar meta={snapshots.get(rightSnap)?.meta ?? null} pageName={runPage} arm={runArm} />
+            )}
           </div>
         </div>
       </div>
+
+      {/* A/B Summary Footer */}
+      {mode === "ab" && currentSnap?.meta && (
+        <footer className="border-t border-border px-4 py-2 bg-muted/20 text-xs flex gap-6">
+          <ScoreBar meta={currentSnap.meta} pageName={selectedPage} />
+        </footer>
+      )}
     </div>
   )
 }
