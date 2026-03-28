@@ -74,16 +74,6 @@ def patch_block(css: str, selector: str, tokens: dict[str, str]) -> str:
     return css[:block_start] + new_block + css[block_end:]
 
 
-def add_chart6_to_theme(css: str) -> str:
-    """Add --color-chart-6 mapping to @theme inline block."""
-    chart6_line = '    --color-chart-6: var(--chart-6);\n'
-    match = re.search(r'(    --color-chart-5: var\(--chart-5\);\n)', css)
-    if match:
-        pos = match.end()
-        css = css[:pos] + chart6_line + css[pos:]
-    return css
-
-
 def main():
     if len(sys.argv) < 3:
         print('Usage: inject-custom-tokens.py <index.css> <custom-tokens.css>')
@@ -97,7 +87,6 @@ def main():
 
     css = patch_block(css, ':root', light_tokens)
     css = patch_block(css, '.dark', dark_tokens)
-    css = add_chart6_to_theme(css)
 
     index_path.write_text(css)
     print(f'Injected custom tokens into {index_path}')

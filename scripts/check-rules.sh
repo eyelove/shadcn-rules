@@ -292,6 +292,18 @@ check "PAGE-02" "No ChartSection (use Card + ChartContainer directly)" '<ChartSe
 # FORB-01: No raw Recharts Tooltip with contentStyle (use ChartTooltip + ChartTooltipContent)
 check "FORB-01" "No raw Recharts Tooltip contentStyle (use ChartTooltip)" 'contentStyle={{' "$TARGET"
 
+# FORB-01: No raw Recharts <Tooltip> (must use <ChartTooltip>)
+check "FORB-01" "No raw Recharts <Tooltip> (use <ChartTooltip>)" '<Tooltip ' "$TARGET"
+
+# FORB-01: No manual stroke on CartesianGrid (ChartContainer handles axis styling)
+check "FORB-01" "No stroke prop on CartesianGrid (ChartContainer handles styling)" 'CartesianGrid stroke=' "$TARGET"
+
+# FORB-01: No manual stroke on XAxis (ChartContainer handles axis styling)
+check "FORB-01" "No stroke prop on XAxis (ChartContainer handles styling)" 'XAxis stroke=' "$TARGET"
+
+# FORB-01: No manual stroke on YAxis (ChartContainer handles axis styling)
+check "FORB-01" "No stroke prop on YAxis (ChartContainer handles styling)" 'YAxis stroke=' "$TARGET"
+
 # FORB-03 extension: No raw <span> used as flex layout container
 check "PAGE-04" "No raw <span> as flex layout container" '<span className="flex' "$TARGET"
 
