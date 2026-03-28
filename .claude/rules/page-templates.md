@@ -37,12 +37,6 @@ Use shadcn components directly (`@/components/ui/*`) plus Composed components (`
 List pages show filtered tabular data. No KPI cards or charts.
 
 ```tsx
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardAction } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { DataTable } from "@/components/composed"
-
 <div className="flex flex-col gap-4 p-4">
   {/* Page Header -- div, not Card */}
   <div className="flex items-center justify-between">
@@ -53,7 +47,7 @@ import { DataTable } from "@/components/composed"
     <Button onClick={handleCreate}>New Campaign</Button>
   </div>
 
-  {/* Table Card */}
+  {/* Table Card -- @.claude/rules/cards.md CARD-03b (DataTable + Inline Filter) */}
   <Card>
     <CardHeader>
       <CardTitle>All Campaigns</CardTitle>
@@ -63,19 +57,7 @@ import { DataTable } from "@/components/composed"
       </CardAction>
     </CardHeader>
     <CardContent>
-      <div className="flex items-center gap-2 pb-4">
-        <Input placeholder="Filter by name..." className="max-w-sm" />
-        <Select>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="paused">Paused</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <DataTable columns={columns} data={rows} onRowClick={(row) => navigate(`/campaigns/${row.id}`)} emptyMessage="No campaigns found." />
+      {/* Filter toolbar + DataTable -- see @.claude/rules/cards.md CARD-03b */}
     </CardContent>
   </Card>
 </div>
@@ -98,14 +80,6 @@ Detail pages show a single entity with KPI summary, charts, and a related data t
 Section order is fixed: KPI -> Chart -> Table.
 
 ```tsx
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardAction } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { ArrowLeftIcon } from "lucide-react"
-import { DataTable, KpiCard } from "@/components/composed"
-import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
-
 <div className="flex flex-col gap-4 p-4">
   {/* Page Header -- div, not Card. Back button + status badge. */}
   <div className="flex items-center justify-between">
@@ -121,60 +95,27 @@ import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
     <Badge variant="outline">{campaign.status}</Badge>
   </div>
 
-  {/* KPI Cards -- 4-column responsive grid */}
+  {/* KPI Cards -- @.claude/rules/cards.md CARD-01 */}
   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
     {kpiItems.map((item) => (
-      <KpiCard key={item.label} label={item.label} value={item.value} delta={item.delta} deltaPositive={item.deltaPositive} />
+      <KpiCard key={item.label} {...item} />
     ))}
   </div>
 
-  {/* Chart Cards -- 2-column grid */}
+  {/* Chart Cards -- @.claude/rules/cards.md CARD-02 */}
   <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-    <Card>
-      <CardHeader>
-        <CardTitle>Daily Spend</CardTitle>
-        <CardAction>
-          {/* Period Select — see cards.md CARD-02 for full pattern */}
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        <ChartContainer config={spendChartConfig} className="min-h-[200px] w-full">
-          <LineChart accessibilityLayer data={spendData}>
-            <CartesianGrid vertical={false} />
-            <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
-            <YAxis tickLine={false} axisLine={false} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Line dataKey="spend" stroke="var(--color-spend)" />
-          </LineChart>
-        </ChartContainer>
-      </CardContent>
-    </Card>
-    <Card>
-      <CardHeader>
-        <CardTitle>Channel Split</CardTitle>
-        <CardAction>
-          {/* Period Select — see cards.md CARD-02 for full pattern */}
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        <ChartContainer config={channelChartConfig} className="min-h-[200px] w-full">
-          <PieChart accessibilityLayer>
-            <Pie data={channelData} dataKey="value" nameKey="channel" fill="var(--color-channel)" />
-            <ChartTooltip content={<ChartTooltipContent />} />
-          </PieChart>
-        </ChartContainer>
-      </CardContent>
-    </Card>
+    <Card>{/* Line chart -- see @.claude/rules/cards.md CARD-02 */}</Card>
+    <Card>{/* Pie chart -- see @.claude/rules/cards.md CARD-02 */}</Card>
   </div>
 
-  {/* Related Table Card */}
+  {/* Related Table Card -- @.claude/rules/cards.md CARD-03 */}
   <Card>
     <CardHeader>
       <CardTitle>Ad Groups</CardTitle>
       <CardDescription>Linked ad groups for this campaign</CardDescription>
     </CardHeader>
     <CardContent>
-      <DataTable columns={adGroupColumns} data={adGroups} onRowClick={(row) => navigate(`/ad-groups/${row.id}`)} emptyMessage="No ad groups found." />
+      <DataTable columns={adGroupColumns} data={adGroups} />
     </CardContent>
   </Card>
 </div>
@@ -199,14 +140,6 @@ Form pages wrap the form inside a Card. Default: back button + single Card.
 Multiple sections = FieldSets inside one Card. 위저드/멀티스텝 또는 복수 독립 폼에서는 복수 Card 허용.
 
 ```tsx
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { Field, FieldLabel, FieldGroup, FieldSet, FieldLegend, FieldSeparator, FieldDescription } from "@/components/ui/field"
-import { ArrowLeftIcon } from "lucide-react"
-
 <div className="flex flex-col gap-4 p-4">
   {/* Page Header -- div, not Card. Back button required. */}
   <div className="flex items-center gap-4">
@@ -216,68 +149,14 @@ import { ArrowLeftIcon } from "lucide-react"
     <h1 className="text-xl font-semibold">Create Campaign</h1>
   </div>
 
-  {/* Single Card for entire form */}
+  {/* Form Card -- @.claude/rules/fields.md FIELD-02 (Multi-Section Form) */}
   <Card>
     <CardHeader>
       <CardTitle>Campaign Details</CardTitle>
       <CardDescription>Fill in the details for your new campaign.</CardDescription>
     </CardHeader>
     <CardContent>
-      <form id="campaign-form" onSubmit={handleSubmit}>
-        <FieldGroup>
-          <FieldSet>
-            <FieldLegend>Basic Info</FieldLegend>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field>
-                <FieldLabel>Campaign Name</FieldLabel>
-                <Input name="name" placeholder="Enter campaign name" />
-              </Field>
-              <Field>
-                <FieldLabel>Status</FieldLabel>
-                <Select name="status">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="draft">Draft</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
-            </div>
-            <Field>
-              <FieldLabel>Description</FieldLabel>
-              <Textarea name="description" placeholder="Optional description" />
-              <FieldDescription>This will be displayed in the campaign list.</FieldDescription>
-            </Field>
-          </FieldSet>
-
-          <FieldSeparator />
-
-          <FieldSet>
-            <FieldLegend>Budget & Targeting</FieldLegend>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Field>
-                <FieldLabel>Daily Budget</FieldLabel>
-                <Input name="budget" type="number" placeholder="0" />
-                <FieldDescription>Daily budget in USD.</FieldDescription>
-              </Field>
-              <Field>
-                <FieldLabel>Region</FieldLabel>
-                <Select name="region">
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select region" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="us">United States</SelectItem>
-                    <SelectItem value="eu">Europe</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
-            </div>
-          </FieldSet>
-        </FieldGroup>
-      </form>
+      {/* form + FieldGroup + FieldSet -- see @.claude/rules/fields.md FIELD-02 */}
     </CardContent>
     <CardFooter>
       <Button variant="outline" type="button" onClick={handleCancel}>Cancel</Button>
@@ -306,12 +185,6 @@ Dashboard pages show a high-level summary.
 Default section order: KPI -> Chart -> Recent Table. Default chart grid: `lg:grid-cols-2`.
 
 ```tsx
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardAction } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { DataTable, KpiCard } from "@/components/composed"
-import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
-
 <div className="flex flex-col gap-4 p-4">
   {/* Page Header -- div, not Card */}
   <div className="flex items-center justify-between">
@@ -322,65 +195,27 @@ import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
     <Button onClick={handleCreate}>New Campaign</Button>
   </div>
 
-  {/* KPI Cards -- 4-column responsive grid */}
+  {/* KPI Cards -- @.claude/rules/cards.md CARD-01 */}
   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
     {kpiItems.map((item) => (
-      <KpiCard key={item.label} label={item.label} value={item.value} delta={item.delta} deltaPositive={item.deltaPositive} />
+      <KpiCard key={item.label} {...item} />
     ))}
   </div>
 
-  {/* Chart Cards -- 2-column grid (MUST be lg:grid-cols-2 on dashboard) */}
+  {/* Chart Cards -- @.claude/rules/cards.md CARD-02 */}
   <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-    <Card>
-      <CardHeader>
-        <CardTitle>Daily Spend</CardTitle>
-        <CardDescription>Last 30 days of ad spend</CardDescription>
-        <CardAction>
-          {/* Period Select — see cards.md CARD-02 for full pattern */}
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        <ChartContainer config={spendChartConfig} className="min-h-[200px] w-full">
-          <LineChart accessibilityLayer data={spendData}>
-            <CartesianGrid vertical={false} />
-            <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
-            <YAxis tickLine={false} axisLine={false} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Line dataKey="spend" stroke="var(--color-spend)" />
-          </LineChart>
-        </ChartContainer>
-      </CardContent>
-    </Card>
-    <Card>
-      <CardHeader>
-        <CardTitle>Channel Split</CardTitle>
-        <CardDescription>Spend distribution by channel</CardDescription>
-        <CardAction>
-          {/* Period Select — see cards.md CARD-02 for full pattern */}
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        <ChartContainer config={channelChartConfig} className="min-h-[200px] w-full">
-          <BarChart accessibilityLayer data={channelData}>
-            <CartesianGrid vertical={false} />
-            <XAxis dataKey="channel" tickLine={false} tickMargin={10} axisLine={false} />
-            <YAxis tickLine={false} axisLine={false} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="spend" fill="var(--color-spend)" radius={4} />
-          </BarChart>
-        </ChartContainer>
-      </CardContent>
-    </Card>
+    <Card>{/* Line chart -- see @.claude/rules/cards.md CARD-02 */}</Card>
+    <Card>{/* Bar chart -- see @.claude/rules/cards.md CARD-02 */}</Card>
   </div>
 
-  {/* Recent Activity Table Card */}
+  {/* Recent Table Card -- @.claude/rules/cards.md CARD-03 */}
   <Card>
     <CardHeader>
       <CardTitle>Recent Campaigns</CardTitle>
       <CardDescription>Latest campaign activity</CardDescription>
     </CardHeader>
     <CardContent>
-      <DataTable columns={columns} data={recentRows} onRowClick={(row) => navigate(`/campaigns/${row.id}`)} emptyMessage="No recent campaigns." />
+      <DataTable columns={columns} data={recentRows} />
     </CardContent>
   </Card>
 </div>
