@@ -27,22 +27,7 @@ NEVER use `style={{}}` on any HTML element or component.
 <div className="mt-6 p-4">
 ```
 
-**No exceptions.** This includes Recharts `contentStyle` — even though it is a library prop rather than a DOM `style` attribute, shadcn provides `ChartTooltip` + `ChartTooltipContent` from `@/components/ui/chart` which handle tooltip styling with token-based classes internally. There is no need for raw Recharts `<Tooltip>` with `contentStyle`.
-
-Additionally, do NOT pass `stroke` props to `CartesianGrid`, `XAxis`, or `YAxis` — `ChartContainer` handles axis/grid theming internally.
-```tsx
-// FORBIDDEN — raw Recharts Tooltip with contentStyle (even with token values)
-<Tooltip contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)" }} />
-
-// FORBIDDEN — manual stroke on axis/grid (ChartContainer handles this)
-<CartesianGrid stroke="var(--border)" />
-<XAxis stroke="var(--muted-foreground)" />
-
-// CORRECT — shadcn chart components (no style props needed)
-<ChartTooltip content={<ChartTooltipContent />} />
-<CartesianGrid vertical={false} />
-<XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
-```
+**No exceptions.** This includes Recharts `contentStyle` and manual `stroke` props on axis/grid components. Chart 관련 inline style 금지의 전체 규칙과 예제: @.claude/rules/cards.md CARD-02
 
 ## FORB-02 — No Hardcoded Colors
 
@@ -74,11 +59,6 @@ NEVER use a raw `<div>` with border/background/padding classes as a substitute f
 <div className="rounded-lg border bg-card p-4">
   <h3 className="font-semibold">Revenue</h3>
   <p>$12,345</p>
-</div>
-
-// FORBIDDEN — div with shadow/border mimicking a card section
-<div className="border border-border rounded-[--radius] p-6 shadow-sm">
-  <BarChart />
 </div>
 
 // CORRECT — use Card with proper internal structure
@@ -204,8 +184,6 @@ NEVER nest a Card inside another Card. One Card per section, one level deep.
 
 ```tsx
 // FORBIDDEN — Card inside Card
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-
 <Card>
   <CardContent>
     <Card>
@@ -216,23 +194,12 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 </Card>
 
 // CORRECT — single Card, use Separator for sub-grouping
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-
 <Card>
   <CardHeader><CardTitle>Section</CardTitle></CardHeader>
-  <CardContent>
-    <div className="space-y-4">
-      <div>
-        <h4 className="text-sm font-medium text-muted-foreground">Sub-section A</h4>
-        <p>Content A</p>
-      </div>
-      <Separator />
-      <div>
-        <h4 className="text-sm font-medium text-muted-foreground">Sub-section B</h4>
-        <p>Content B</p>
-      </div>
-    </div>
+  <CardContent className="space-y-4">
+    <div>...group A...</div>
+    <Separator />
+    <div>...group B...</div>
   </CardContent>
 </Card>
 ```

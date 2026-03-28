@@ -130,34 +130,8 @@ Charts use shadcn's chart components from `@/components/ui/chart`:
 - `ChartLegend` + `ChartLegendContent` — themed legend
 
 Recharts primitives (`BarChart`, `LineChart`, `CartesianGrid`, `XAxis`, `YAxis`, etc.) are imported directly from `recharts`.
-Axis/Grid styling is handled by `ChartContainer` — do NOT pass `stroke` props to axis/grid components.
-Chart colors are defined in `chartConfig` and referenced as `var(--color-KEY)`.
 
-```tsx
-// CORRECT — shadcn chart pattern (no stroke on axis/grid, chartConfig colors)
-<ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-  <BarChart accessibilityLayer data={data}>
-    <CartesianGrid vertical={false} />
-    <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
-    <ChartTooltip content={<ChartTooltipContent />} />
-    <ChartLegend content={<ChartLegendContent />} />
-    <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
-  </BarChart>
-</ChartContainer>
-
-// FORBIDDEN — raw Recharts Tooltip with contentStyle
-<Tooltip contentStyle={{ backgroundColor: "var(--card)" }} />
-
-// FORBIDDEN — manual stroke on axis/grid (ChartContainer handles this)
-<CartesianGrid stroke="var(--border)" />
-<XAxis stroke="var(--muted-foreground)" />
-
-// FORBIDDEN — hardcoded colors
-<CartesianGrid stroke="#e5e7eb" />
-<Bar fill="blue" />
-```
-// WHY: shadcn's ChartContainer handles axis/grid theming internally. ChartTooltipContent and
-// ChartLegendContent use token-based classes. Manual stroke props and raw Tooltip bypass this system.
+Full chart pattern with code examples, chartConfig usage, and forbidden patterns: @.claude/rules/cards.md CARD-02
 
 ## Escape Hatch
 

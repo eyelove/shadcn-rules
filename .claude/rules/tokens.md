@@ -145,51 +145,18 @@ For all forbidden color patterns with FORBIDDEN/CORRECT examples, see: @.claude/
 
 ## Chart & Library Props
 
-Charts live inside `Card > CardContent > ChartContainer` — see @.claude/rules/cards.md (CARD-02) for the full pattern.
-Chart colors are defined in `chartConfig` using CSS custom property tokens, then referenced as `var(--color-KEY)` on chart elements.
-Axis/Grid styling is handled by `ChartContainer` internally — do NOT pass `stroke` props.
-
+Chart colors are defined in `chartConfig` using CSS custom property tokens:
 ```tsx
-// CORRECT — shadcn chart pattern
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-
 const chartConfig = {
   desktop: { label: "Desktop", color: "var(--chart-1)" },
   mobile: { label: "Mobile", color: "var(--chart-2)" },
 } satisfies ChartConfig
-
-<Card>
-  <CardHeader>
-    <CardTitle>Daily Spend</CardTitle>
-  </CardHeader>
-  <CardContent>
-    <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-      <LineChart accessibilityLayer data={data}>
-        <CartesianGrid vertical={false} />
-        <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
-        <YAxis tickLine={false} axisLine={false} />
-        <ChartTooltip content={<ChartTooltipContent />} />
-        <Line dataKey="desktop" stroke="var(--color-desktop)" />
-        <Line dataKey="mobile" stroke="var(--color-mobile)" />
-      </LineChart>
-    </ChartContainer>
-  </CardContent>
-</Card>
-
-// FORBIDDEN — raw Recharts Tooltip with contentStyle
-<Tooltip contentStyle={{ backgroundColor: "var(--card)" }} />
-
-// FORBIDDEN — manual stroke on axis/grid
-<CartesianGrid stroke="var(--border)" />
-<XAxis stroke="var(--muted-foreground)" />
-
-// FORBIDDEN — hardcoded color values
-stroke="#8884d8"
-fill="blue"
 ```
-ALWAYS use shadcn chart components (`ChartTooltip`, `ChartLegend`) from `@/components/ui/chart`.
-NEVER pass `stroke` to `CartesianGrid`, `XAxis`, `YAxis` — `ChartContainer` handles axis/grid theming.
+
+Chart elements reference colors as `var(--color-KEY)` (e.g., `stroke="var(--color-desktop)"`).
+Charts live inside `Card > CardContent > ChartContainer`.
+
+Full chart pattern, axis/grid rules, and forbidden patterns: @.claude/rules/cards.md CARD-02
 
 ## Escape Hatch
 
