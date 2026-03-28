@@ -83,6 +83,9 @@ Follow these rules for every file you touch.
 
 ## Always Apply
 
+- **shadcn 컴포넌트 원본 수정 금지**: `@/components/ui/*`의 shadcn 컴포넌트 소스 코드를 절대 수정하지 않는다. 이 프로젝트의 목적은 컴포넌트를 수정하지 않고 규칙과 예제만으로 일관된 코드를 생성하는 것이다. shadcn 컴포넌트에 기본값이 부족하면(예: CardFooter에 gap 없음) 규칙 파일의 예제 코드에서 className으로 보완한다.
+  // WHY: shadcn 원본을 건드리면 `npx shadcn@latest` 업데이트 시 충돌하고, 다른 프로젝트에 `.claude/` 디렉토리만 복사해서 재사용할 수 없다.
+
 - **Imports**: Use shadcn components directly from `@/components/ui/*`. Use `@/components/composed/` only for DataTable, SearchBar, KpiCard.
   // WHY: shadcn components are the standard. Composed is only for domain logic that can't be expressed with direct shadcn usage.
 
