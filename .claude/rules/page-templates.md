@@ -158,7 +158,7 @@ Multiple sections = FieldSets inside one Card. 위저드/멀티스텝 또는 복
     <CardContent>
       {/* form + FieldGroup + FieldSet -- see @.claude/rules/fields.md FIELD-02 */}
     </CardContent>
-    <CardFooter>
+    <CardFooter className="gap-2">
       <Button variant="outline" type="button" onClick={handleCancel}>Cancel</Button>
       <Button type="submit" form="campaign-form">Save</Button>
     </CardFooter>
