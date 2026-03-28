@@ -108,36 +108,56 @@ For detailed Props contracts and usage examples, see:
 - @.claude/rules/cards.md — KpiCard props, delta formatting, grid layout
 - @.claude/rules/fields.md — form field patterns with shadcn primitives
 
-## Render Functions in DataTable
+## Cell Functions in DataTable
 
-When using `render` in DataTable columns, you MAY use `<span>` with token-based Tailwind classes:
+When using `cell` in DataTable columns, you MAY use `<span>` with token-based Tailwind classes:
 ```tsx
-// ALLOWED — token-based text styling in render functions
-render: (value) => <span className="font-medium text-foreground">{value}</span>
-render: (value) => <Badge variant="outline">{value}</Badge>
+// ALLOWED — token-based text styling in cell functions
+cell: (row) => <span className="font-medium text-foreground">{row.name}</span>
+cell: (row) => <Badge variant="outline">{row.status}</Badge>
 
-// FORBIDDEN — hardcoded colors or inline styles in render functions
-render: (value) => <span style={{ color: "red" }}>{value}</span>
-render: (value) => <span className="text-red-500">{value}</span>
+// FORBIDDEN — hardcoded colors or inline styles in cell functions
+cell: (row) => <span style={{ color: "red" }}>{row.status}</span>
+cell: (row) => <span className="text-red-500">{row.status}</span>
 ```
-// WHY: DataTable render functions need lightweight formatting. Token classes keep consistency.
+// WHY: DataTable cell functions need lightweight formatting. Token classes keep consistency.
 
 ## Chart Library Usage
 
-Charts use shadcn's `ChartContainer`, `ChartTooltip`, and `ChartTooltipContent` from `@/components/ui/chart`.
-Recharts axis/grid props that accept string values MUST use token vars. Tooltip styling is handled by `ChartTooltipContent` internally.
-```tsx
-// CORRECT — shadcn chart components + token vars
-<CartesianGrid stroke="var(--border)" />
-<ChartTooltip content={<ChartTooltipContent />} />
+Charts use shadcn's chart components from `@/components/ui/chart`:
+- `ChartContainer` — responsive wrapper (MUST have `min-h-[VALUE]` or `aspect-*`)
+- `ChartTooltip` + `ChartTooltipContent` — themed tooltip
+- `ChartLegend` + `ChartLegendContent` — themed legend
 
-// FORBIDDEN — raw Recharts Tooltip with inline style
+Recharts primitives (`BarChart`, `LineChart`, `CartesianGrid`, `XAxis`, `YAxis`, etc.) are imported directly from `recharts`.
+Axis/Grid styling is handled by `ChartContainer` — do NOT pass `stroke` props to axis/grid components.
+Chart colors are defined in `chartConfig` and referenced as `var(--color-KEY)`.
+
+```tsx
+// CORRECT — shadcn chart pattern (no stroke on axis/grid, chartConfig colors)
+<ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+  <BarChart accessibilityLayer data={data}>
+    <CartesianGrid vertical={false} />
+    <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
+    <ChartTooltip content={<ChartTooltipContent />} />
+    <ChartLegend content={<ChartLegendContent />} />
+    <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
+  </BarChart>
+</ChartContainer>
+
+// FORBIDDEN — raw Recharts Tooltip with contentStyle
 <Tooltip contentStyle={{ backgroundColor: "var(--card)" }} />
+
+// FORBIDDEN — manual stroke on axis/grid (ChartContainer handles this)
+<CartesianGrid stroke="var(--border)" />
+<XAxis stroke="var(--muted-foreground)" />
 
 // FORBIDDEN — hardcoded colors
 <CartesianGrid stroke="#e5e7eb" />
+<Bar fill="blue" />
 ```
-// WHY: shadcn's ChartTooltipContent handles theming with token-based classes. No style={{}} needed.
+// WHY: shadcn's ChartContainer handles axis/grid theming internally. ChartTooltipContent and
+// ChartLegendContent use token-based classes. Manual stroke props and raw Tooltip bypass this system.
 
 ## Escape Hatch
 
