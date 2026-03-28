@@ -296,6 +296,30 @@ Form cards embed a form inside a Card, typically on settings or edit pages.
 // WHY: Card가 폼의 시각적 경계를 제공한다. CardFooter가 버튼을 CardContent 밖에 고정한다.
 // form id linking으로 버튼이 form 엘리먼트 안에 있지 않아도 submit이 동작한다.
 
+**Forbidden:**
+
+```tsx
+// FORBIDDEN — form without Card
+<form onSubmit={handleSubmit}>
+  <FieldGroup>...</FieldGroup>
+  <Button type="submit">Save</Button>
+</form>
+```
+// WHY: Card provides visual boundary, header context, and footer button placement.
+
+```tsx
+// FORBIDDEN — submit button inside CardContent
+<CardContent>
+  <form onSubmit={handleSubmit}>
+    <FieldGroup>...</FieldGroup>
+    <Button type="submit">Save</Button>
+  </form>
+</CardContent>
+```
+// WHY: Submit belongs in CardFooter. form id linking keeps buttons outside the form element.
+
+- 단일 폼은 하나의 Card. 멀티스텝/위저드에서만 복수 Card 허용.
+
 ---
 
 ### CARD-05 — Mixed Card (Content Grouping)
