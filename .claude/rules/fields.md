@@ -8,7 +8,7 @@ paths:
 
 # Field Rules
 
-Forms in dashboard pages use shadcn's Field component system directly inside Card wrappers.
+Forms in dashboard pages use shadcn's Field component system. Card 래핑은 @.claude/rules/cards.md CARD-04를 따른다.
 No custom Form abstraction layer. react-hook-form integrates via Controller.
 
 ## Principles
@@ -16,133 +16,109 @@ No custom Form abstraction layer. react-hook-form integrates via Controller.
 1. **Use shadcn Field system directly.** Field, FieldLabel, FieldSet, FieldLegend, FieldGroup, FieldDescription, FieldError, FieldSeparator, FieldContent are all imported from `@/components/ui/field`. No custom FormField/FormFieldSet/FormActions wrappers.
 // WHY: shadcn's Field components are accessible, composable, and well-documented. Wrapping them without adding logic creates indirection with no benefit.
 
-2. **Card + Field combination.** Card provides the visual boundary for the entire form. FieldSet provides section grouping within. One form = one Card. Multiple sections = multiple FieldSets inside one Card, NOT multiple Cards.
-// WHY: Card-per-section splitting fragments the form visually and breaks the single-form mental model. FieldSet + FieldSeparator handles sectioning within a Card.
+2. **Card + Field combination.** Card provides the visual boundary for the entire form. FieldSet provides section grouping within. One form = one Card. Multiple sections = multiple FieldSets inside one Card, NOT multiple Cards. Card 래핑 규칙: @.claude/rules/cards.md CARD-04.
 
 3. **react-hook-form integrates via Controller directly.** No custom Form context wrapper. Controller renders Field components and wires up validation state via `data-invalid` and `aria-invalid`.
 // WHY: Controller is react-hook-form's standard integration point. A custom wrapper adds API surface without adding capability.
 
 ## Field Component Hierarchy
 
+Card 래핑(CardHeader → CardContent → CardFooter)은 @.claude/rules/cards.md CARD-04를 따른다.
+이 파일은 `<form>` 내부 구조만 다룬다.
+
 ```
-Card
-  └─ CardHeader (CardTitle + CardDescription)
-  └─ CardContent
-  │    └─ <form id="form-id">
-  │         └─ FieldGroup
-  │              └─ FieldSet
-  │                   └─ FieldLegend
-  │                   └─ Field
-  │                        └─ FieldLabel
-  │                        └─ Input | Select | Textarea | Checkbox
-  │                        └─ FieldDescription
-  │                        └─ FieldError
-  └─ CardFooter (Cancel + Submit)
+<form id="form-id">
+  └─ FieldGroup
+       └─ FieldSet
+            └─ FieldLegend
+            └─ Field
+                 └─ FieldLabel
+                 └─ Input | Select | Combobox | Textarea | Checkbox | DatePicker(Popover+Calendar)
+                 └─ FieldDescription
+                 └─ FieldError
 ```
 
-// WHY: CardFooter holds action buttons outside the scrollable form content area. The `form` attribute on Submit links it to the form in CardContent without nesting buttons inside the form element.
+---
+
+## Common Imports
+
+폼 패턴에서 공통으로 사용하는 import. 각 FIELD 예제에서는 해당 패턴 고유 import만 표시한다.
+
+```tsx
+import { Field, FieldLabel, FieldGroup, FieldSet, FieldLegend, FieldSeparator, FieldDescription, FieldError, FieldContent } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+```
 
 ---
 
 ## FIELD-01 — Basic Form (Single Section)
 
-Card > CardContent > form > FieldGroup > Field (FieldLabel + Input + FieldDescription).
-CardFooter with Cancel (outline) + Save (submit), linked via form id.
+form > FieldGroup > Field (FieldLabel + Input + FieldDescription).
+Card 래핑과 CardFooter: @.claude/rules/cards.md CARD-04
 
 ```tsx
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
-import { Field, FieldLabel, FieldGroup, FieldDescription } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
-
-<Card>
-  <CardHeader>
-    <CardTitle>Create Campaign</CardTitle>
-    <CardDescription>Fill in the details for your new campaign.</CardDescription>
-  </CardHeader>
-  <CardContent>
-    <form id="campaign-form" onSubmit={handleSubmit}>
-      <FieldGroup>
-        <Field>
-          <FieldLabel>Campaign Name</FieldLabel>
-          <Input name="name" placeholder="Enter campaign name" />
-          <FieldDescription>This will be displayed in the campaign list.</FieldDescription>
-        </Field>
-        <Field>
-          <FieldLabel>Description</FieldLabel>
-          <Textarea name="description" placeholder="Optional description" />
-        </Field>
-      </FieldGroup>
-    </form>
-  </CardContent>
-  <CardFooter>
-    <Button variant="outline" type="button" onClick={handleCancel}>Cancel</Button>
-    <Button type="submit" form="campaign-form">Save</Button>
-  </CardFooter>
-</Card>
+<form id="campaign-form" onSubmit={handleSubmit}>
+  <FieldGroup>
+    <Field>
+      <FieldLabel>Campaign Name</FieldLabel>
+      <Input name="name" placeholder="Enter campaign name" />
+      <FieldDescription>This will be displayed in the campaign list.</FieldDescription>
+    </Field>
+    <Field>
+      <FieldLabel>Description</FieldLabel>
+      <Textarea name="description" placeholder="Optional description" />
+    </Field>
+  </FieldGroup>
+</form>
 ```
 
 ## FIELD-02 — Multi-Section Form (FieldSet Grouping)
 
-Card > CardContent > form > FieldGroup > FieldSet (FieldLegend) + FieldSeparator + FieldSet.
-One form = one Card. Sections divided by FieldSet, NOT by multiple Cards.
+form > FieldGroup > FieldSet (FieldLegend) + FieldSeparator + FieldSet.
+Card 래핑: @.claude/rules/cards.md CARD-04
+
+`<form>` 내부만 표시. Card 래핑: @.claude/rules/cards.md CARD-04
 
 ```tsx
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
-import { Field, FieldLabel, FieldGroup, FieldSet, FieldLegend, FieldSeparator, FieldDescription } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
+<form id="settings-form" onSubmit={handleSubmit}>
+  <FieldGroup>
+    <FieldSet>
+      <FieldLegend>Basic Info</FieldLegend>
+      <Field>
+        <FieldLabel>Campaign Name</FieldLabel>
+        <Input name="name" />
+      </Field>
+      <Field>
+        <FieldLabel>Description</FieldLabel>
+        <Textarea name="description" />
+      </Field>
+    </FieldSet>
 
-<Card>
-  <CardHeader>
-    <CardTitle>Campaign Settings</CardTitle>
-  </CardHeader>
-  <CardContent>
-    <form id="settings-form" onSubmit={handleSubmit}>
-      <FieldGroup>
-        <FieldSet>
-          <FieldLegend>Basic Info</FieldLegend>
-          <Field>
-            <FieldLabel>Campaign Name</FieldLabel>
-            <Input name="name" />
-          </Field>
-          <Field>
-            <FieldLabel>Description</FieldLabel>
-            <Textarea name="description" />
-          </Field>
-        </FieldSet>
+    <FieldSeparator />
 
-        <FieldSeparator />
-
-        <FieldSet>
-          <FieldLegend>Targeting</FieldLegend>
-          <Field>
-            <FieldLabel>Region</FieldLabel>
-            <Select name="region">
-              <SelectTrigger><SelectValue placeholder="Select region" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="us">United States</SelectItem>
-                <SelectItem value="eu">Europe</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-          <Field>
-            <FieldLabel>Budget</FieldLabel>
-            <Input name="budget" type="number" />
-            <FieldDescription>Daily budget in USD.</FieldDescription>
-          </Field>
-        </FieldSet>
-      </FieldGroup>
-    </form>
-  </CardContent>
-  <CardFooter>
-    <Button variant="outline" type="button" onClick={handleCancel}>Cancel</Button>
-    <Button type="submit" form="settings-form">Save</Button>
-  </CardFooter>
-</Card>
+    <FieldSet>
+      <FieldLegend>Targeting</FieldLegend>
+      <Field>
+        <FieldLabel>Region</FieldLabel>
+        <Select name="region">
+          <SelectTrigger><SelectValue placeholder="Select region" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="us">United States</SelectItem>
+            <SelectItem value="eu">Europe</SelectItem>
+          </SelectContent>
+        </Select>
+      </Field>
+      <Field>
+        <FieldLabel>Budget</FieldLabel>
+        <Input name="budget" type="number" />
+        <FieldDescription>Daily budget in USD.</FieldDescription>
+      </Field>
+    </FieldSet>
+  </FieldGroup>
+</form>
 ```
 
 ## FIELD-03 — 2-Column Field Layout
@@ -178,59 +154,44 @@ Inside FieldSet, use a grid div to place Fields side by side. Can mix with full-
 Controller renders Field components. Use `data-invalid` on Field and `aria-invalid` on Input
 to wire up validation state. FieldError receives the error via its `errors` prop.
 
-```tsx
-import { useForm, Controller } from "react-hook-form"
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
-import { Field, FieldLabel, FieldGroup, FieldError, FieldDescription } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+Card 래핑: @.claude/rules/cards.md CARD-04. 고유 import: `import { useForm, Controller } from "react-hook-form"`
 
+```tsx
 function CampaignForm() {
   const { control, handleSubmit } = useForm({
     defaultValues: { name: "", budget: "" },
   })
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Create Campaign</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form id="campaign-form" onSubmit={handleSubmit(onSubmit)}>
-          <FieldGroup>
-            <Controller
-              control={control}
-              name="name"
-              rules={{ required: "Campaign name is required" }}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid || undefined}>
-                  <FieldLabel>Campaign Name</FieldLabel>
-                  <Input {...field} aria-invalid={fieldState.invalid || undefined} />
-                  <FieldDescription>Unique identifier for this campaign.</FieldDescription>
-                  <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
-                </Field>
-              )}
-            />
-            <Controller
-              control={control}
-              name="budget"
-              rules={{ required: "Budget is required", min: { value: 1, message: "Must be at least $1" } }}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid || undefined}>
-                  <FieldLabel>Daily Budget</FieldLabel>
-                  <Input {...field} type="number" aria-invalid={fieldState.invalid || undefined} />
-                  <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
-                </Field>
-              )}
-            />
-          </FieldGroup>
-        </form>
-      </CardContent>
-      <CardFooter>
-        <Button variant="outline" type="button" onClick={handleCancel}>Cancel</Button>
-        <Button type="submit" form="campaign-form">Save</Button>
-      </CardFooter>
-    </Card>
+    <form id="campaign-form" onSubmit={handleSubmit(onSubmit)}>
+      <FieldGroup>
+        <Controller
+          control={control}
+          name="name"
+          rules={{ required: "Campaign name is required" }}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid || undefined}>
+              <FieldLabel>Campaign Name</FieldLabel>
+              <Input {...field} aria-invalid={fieldState.invalid || undefined} />
+              <FieldDescription>Unique identifier for this campaign.</FieldDescription>
+              <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+            </Field>
+          )}
+        />
+        <Controller
+          control={control}
+          name="budget"
+          rules={{ required: "Budget is required", min: { value: 1, message: "Must be at least $1" } }}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid || undefined}>
+              <FieldLabel>Daily Budget</FieldLabel>
+              <Input {...field} type="number" aria-invalid={fieldState.invalid || undefined} />
+              <FieldError errors={fieldState.error ? [fieldState.error] : undefined} />
+            </Field>
+          )}
+        />
+      </FieldGroup>
+    </form>
   )
 }
 ```
@@ -243,11 +204,9 @@ function CampaignForm() {
 Use `orientation="horizontal"` on Field. Checkbox goes first, then FieldContent wraps
 FieldLabel and FieldDescription side by side.
 
-```tsx
-import { Field, FieldLabel, FieldContent, FieldDescription } from "@/components/ui/field"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Switch } from "@/components/ui/switch"
+고유 import: `Checkbox` from `@/components/ui/checkbox`, `Switch` from `@/components/ui/switch`
 
+```tsx
 // Checkbox — discrete on/off (e.g., agree to terms, multi-select options)
 <Field orientation="horizontal">
   <Checkbox name="notifications" />
@@ -271,60 +230,117 @@ import { Switch } from "@/components/ui/switch"
 // groups the label + description so they wrap together next to the control.
 // Checkbox = form submission용 선택, Switch = 즉시 반영되는 토글. 용도에 맞게 선택한다.
 
+## FIELD-06 — Date Picker Field
+
+폼 필드에서 날짜를 입력받을 때 Popover + Calendar을 조합한다.
+트리거 버튼은 `variant="outline"`으로 선택된 날짜 또는 placeholder를 표시한다.
+
+고유 import: `Calendar` from `@/components/ui/calendar`, `Popover/PopoverTrigger/PopoverContent` from `@/components/ui/popover`, `CalendarIcon` from `lucide-react`, `formatDate` from `@/lib/format`
+
+```tsx
+<Field>
+  <FieldLabel>Start Date</FieldLabel>
+  <Popover>
+    <PopoverTrigger asChild>
+      <Button
+        variant="outline"
+        className="w-full justify-start text-left font-normal"
+        data-empty={!date || undefined}
+      >
+        <CalendarIcon className="mr-2 h-4 w-4" />
+        {date ? formatDate(date, { locale: "ko-KR" }) : <span className="text-muted-foreground">날짜 선택</span>}
+      </Button>
+    </PopoverTrigger>
+    <PopoverContent className="w-auto p-0" align="start">
+      <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
+    </PopoverContent>
+  </Popover>
+  <FieldDescription>Campaign start date.</FieldDescription>
+</Field>
+```
+
+**Rules:**
+- 트리거는 `Button variant="outline"` — Input이 아님
+- `data-empty` 속성으로 placeholder 스타일링 (`data-[empty]:text-muted-foreground`)
+- `PopoverContent`에 `className="w-auto p-0"`, `align="start"`
+- `Calendar`에 `initialFocus`로 popover 열릴 때 키보드 포커스 이동
+- `formatDate` from `@/lib/format`으로 날짜 표시 — `date-fns` 직접 사용 금지 (@.claude/rules/formatting.md FMT-04)
+
+// WHY: Popover + Calendar 조합이 shadcn의 공식 Date Picker 패턴이다.
+// 대시보드에서 Calendar 인라인은 사용하지 않는다 — 공간 효율을 위해 항상 Popover 안에 넣는다.
+
+## FIELD-07 — Combobox Field
+
+옵션이 많거나(10개 이상) 서버에서 Ajax로 로드하는 경우 Combobox를 사용한다.
+옵션이 ~10개 이하 고정 목록이면 Select를 사용한다 (@.claude/rules/components.md SELECT-01).
+
+고유 import: `Combobox/ComboboxInput/ComboboxContent/ComboboxList/ComboboxItem/ComboboxEmpty` from `@/components/ui/combobox`
+
+```tsx
+const campaigns = [
+  { value: "camp-1", label: "Summer Sale 2026" },
+  { value: "camp-2", label: "Brand Awareness Q1" },
+  // ... 수십~수백 개
+]
+
+<Field>
+  <FieldLabel>Campaign</FieldLabel>
+  <Combobox
+    items={campaigns}
+    value={selectedCampaign}
+    onValueChange={setSelectedCampaign}
+    itemToStringValue={(item) => item.label}
+  >
+    <ComboboxInput placeholder="Search campaigns..." />
+    <ComboboxContent>
+      <ComboboxList>
+        {(item) => <ComboboxItem>{item.label}</ComboboxItem>}
+      </ComboboxList>
+      <ComboboxEmpty>No campaigns found.</ComboboxEmpty>
+    </ComboboxContent>
+  </Combobox>
+  <FieldDescription>Select the target campaign.</FieldDescription>
+</Field>
+```
+
+**Ajax 로드 패턴:**
+```tsx
+// Combobox의 onValueChange에서 debounce + fetch 후 items 갱신
+const [query, setQuery] = useState("")
+const [items, setItems] = useState([])
+
+useEffect(() => {
+  const timer = setTimeout(() => {
+    fetch(`/api/campaigns?q=${query}`).then(res => res.json()).then(setItems)
+  }, 300)
+  return () => clearTimeout(timer)
+}, [query])
+
+<Combobox items={items} onValueChange={setSelectedCampaign}>
+  <ComboboxInput placeholder="Search campaigns..." value={query} onChange={(e) => setQuery(e.target.value)} />
+  {/* ... */}
+</Combobox>
+```
+
+**Rules:**
+- 필터 바에서 사용할 때는 Field 래핑 불필요 (fields.md Exception 참고)
+- 폼 필드에서 사용할 때는 반드시 Field > FieldLabel 안에 배치
+- shadcn 공식 문서에 async 패턴은 없음 — debounce + fetch로 직접 구현
+
+// WHY: Select는 검색 기능이 없어 옵션이 많으면 사용 불가능하다.
+// Combobox는 타이핑 즉시 필터링하므로 대량 목록에서도 빠르게 찾을 수 있다.
+
 ---
 
 ## CardFooter Button Rules
 
-**원칙:**
-- 주요 액션(Submit, Delete 등)은 `variant`로 시각적 구분 (default for submit, destructive for delete)
-- 보조 액션(Cancel, Reset 등)은 `variant="outline"` 사용
-- Submit button uses `form="form-id"` attribute to link to the form in CardContent
-- 버튼 배치(순서, 좌/우/중앙 정렬)는 프로젝트 컨벤션에 따라 자유롭게 설정 가능
-- 3개 이상 버튼도 허용 (예: Cancel + Save Draft + Publish)
-
-**기본값** (특별한 지시 없으면):
-```tsx
-<CardFooter>
-  <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
-  <Button type="submit" form="campaign-form">Save</Button>
-</CardFooter>
-```
-
-// WHY: 주요 액션은 시각적으로 구분되어야 사용자가 결과를 예측할 수 있다.
-// form id linking keeps buttons outside the form element.
+CardFooter 버튼 규칙: @.claude/rules/cards.md CARD-04
 
 ---
 
 ## Forbidden Patterns
 
-### Card-less Form
-
-NEVER render a form without a Card wrapper in dashboard pages.
-// WHY: Card provides the visual boundary, header context, and footer button placement. Without it, forms float without structure.
-
-```tsx
-// FORBIDDEN — form without Card
-<form onSubmit={handleSubmit}>
-  <FieldGroup>
-    <Field><FieldLabel>Name</FieldLabel><Input /></Field>
-  </FieldGroup>
-  <Button type="submit">Save</Button>
-</form>
-
-// CORRECT — form inside Card
-<Card>
-  <CardContent>
-    <form id="my-form" onSubmit={handleSubmit}>
-      <FieldGroup>
-        <Field><FieldLabel>Name</FieldLabel><Input /></Field>
-      </FieldGroup>
-    </form>
-  </CardContent>
-  <CardFooter>
-    <Button type="submit" form="my-form">Save</Button>
-  </CardFooter>
-</Card>
-```
+Card 래핑 관련 금지 패턴(Card-less Form, Submit Button 위치, Card-per-Section): @.claude/rules/cards.md CARD-04
 
 ### FieldLabel-less Input
 
@@ -368,77 +384,11 @@ NEVER use Input, Select, Textarea, or Checkbox outside a Field wrapper in form c
 </CardContent>
 ```
 
-### Card-per-Section Splitting
-
-**기본값**: 단일 폼은 하나의 Card 안에 FieldSet + FieldSeparator로 섹션을 나눈다.
-**허용**: 위저드/멀티스텝 폼에서 각 스텝이 독립 Card로 분리되거나, 페이지에 복수의 독립 폼이 존재하는 경우 복수 Card 허용.
-// WHY: 기본적으로 하나의 Card가 폼의 시각적 경계를 명확히 한다. 다만 복잡한 폼 구조에서는 분리가 필요할 수 있다.
-
-```tsx
-// AVOID — 단일 폼을 여러 Card로 분리 (기본값에서는 비권장)
-<Card><CardHeader><CardTitle>Basic Info</CardTitle></CardHeader>
-  <CardContent><Field>...</Field></CardContent></Card>
-<Card><CardHeader><CardTitle>Targeting</CardTitle></CardHeader>
-  <CardContent><Field>...</Field></CardContent></Card>
-
-// DEFAULT — single Card, multiple FieldSets (특별한 지시 없으면 이 패턴)
-<Card>
-  <CardHeader><CardTitle>Campaign Settings</CardTitle></CardHeader>
-  <CardContent>
-    <form id="settings-form">
-      <FieldGroup>
-        <FieldSet><FieldLegend>Basic Info</FieldLegend>...</FieldSet>
-        <FieldSeparator />
-        <FieldSet><FieldLegend>Targeting</FieldLegend>...</FieldSet>
-      </FieldGroup>
-    </form>
-  </CardContent>
-  <CardFooter>...</CardFooter>
-</Card>
-```
-
-### Submit Button Inside CardContent
-
-NEVER place the submit button inside CardContent. It belongs in CardFooter.
-// WHY: CardFooter provides consistent button placement at the bottom of the Card.
-
-```tsx
-// FORBIDDEN — submit inside CardContent
-<CardContent>
-  <form onSubmit={handleSubmit}>
-    <FieldGroup>...</FieldGroup>
-    <Button type="submit">Save</Button>
-  </form>
-</CardContent>
-
-// CORRECT — submit in CardFooter with form id
-<CardContent>
-  <form id="my-form" onSubmit={handleSubmit}>
-    <FieldGroup>...</FieldGroup>
-  </form>
-</CardContent>
-<CardFooter>
-  <Button type="submit" form="my-form">Save</Button>
-</CardFooter>
-```
-
 ### Button Variant 미구분
 
-주요 액션과 보조 액션은 반드시 variant로 시각적으로 구분해야 한다. 배치 순서와 정렬은 프로젝트 컨벤션에 따른다.
-
-```tsx
-// FORBIDDEN — 모든 버튼이 같은 variant
-<CardFooter>
-  <Button type="button">Cancel</Button>
-  <Button type="submit" form="my-form">Save</Button>
-</CardFooter>
-
-// CORRECT — variant로 역할 구분 (기본값: 보조 → 주요 순서)
-<CardFooter>
-  <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
-  <Button type="submit" form="my-form">Save</Button>
-</CardFooter>
-```
+주요 액션과 보조 액션은 반드시 variant로 시각적으로 구분해야 한다.
+// WHY: 주요 액션은 시각적으로 구분되어야 사용자가 결과를 예측할 수 있다.
+CardFooter 버튼 예제: @.claude/rules/cards.md CARD-04
 
 ---
 
