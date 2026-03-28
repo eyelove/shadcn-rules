@@ -9,6 +9,19 @@ expected_violations:
   - FMT-01
   - FMT-02
   - TOKEN-01
+expected_ui:
+  - card
+  - button
+  - badge
+  - select
+  - chart
+expected_composed:
+  - DataTable
+  - KpiCard
+expected_lib:
+  - formatCurrencyCompact
+  - formatCompact
+  - formatDelta
 ---
 
 # Dashboard Overview 페이지 생성
@@ -39,4 +52,4 @@ expected_violations:
 - padding, margin은 style prop으로 직접 제어
 
 ## 출력
-- 파일명: `tests/samples/dashboard-overview.adversarial.tsx`
+- 파일 위치: `preview/src/pages/dashboard-overview.adversarial.tsx`

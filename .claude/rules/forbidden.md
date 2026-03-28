@@ -27,13 +27,21 @@ NEVER use `style={{}}` on any HTML element or component.
 <div className="mt-6 p-4">
 ```
 
-**Exception (third-party library API only):** Recharts and similar libraries have props that ONLY accept style objects (e.g., `contentStyle`, `labelStyle`). These are allowed IF AND ONLY IF all values use CSS custom property tokens:
-```tsx
-// ALLOWED — library prop, values are tokens
-<Tooltip contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", color: "var(--card-foreground)" }} />
+**No exceptions.** This includes Recharts `contentStyle` — even though it is a library prop rather than a DOM `style` attribute, shadcn provides `ChartTooltip` + `ChartTooltipContent` from `@/components/ui/chart` which handle tooltip styling with token-based classes internally. There is no need for raw Recharts `<Tooltip>` with `contentStyle`.
 
-// FORBIDDEN — library prop with hardcoded values
-<Tooltip contentStyle={{ backgroundColor: "#fff", color: "black" }} />
+Additionally, do NOT pass `stroke` props to `CartesianGrid`, `XAxis`, or `YAxis` — `ChartContainer` handles axis/grid theming internally.
+```tsx
+// FORBIDDEN — raw Recharts Tooltip with contentStyle (even with token values)
+<Tooltip contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)" }} />
+
+// FORBIDDEN — manual stroke on axis/grid (ChartContainer handles this)
+<CartesianGrid stroke="var(--border)" />
+<XAxis stroke="var(--muted-foreground)" />
+
+// CORRECT — shadcn chart components (no style props needed)
+<ChartTooltip content={<ChartTooltipContent />} />
+<CartesianGrid vertical={false} />
+<XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
 ```
 
 ## FORB-02 — No Hardcoded Colors
@@ -53,7 +61,7 @@ stroke="oklch(0.5 0.2 240)"
 
 // CORRECT — token-based
 <div className="bg-background text-foreground border-border" />
-stroke="var(--chart-1)"
+stroke="var(--color-desktop)"  // color defined in chartConfig using var(--chart-1)
 ```
 
 ## FORB-03 — No div as Card Substitute

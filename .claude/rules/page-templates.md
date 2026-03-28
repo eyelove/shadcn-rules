@@ -13,17 +13,22 @@ Use shadcn components directly (`@/components/ui/*`) plus Composed components (`
 
 ## Page Structure Rules
 
+**절대 규칙:**
 | Rule | Description |
 |------|------------|
 | Root wrapper | `div.flex.flex-col.gap-4.p-4` -- all pages (spacing defaults: @tokens.md) |
 | Page header | NOT a Card -- `div` with `h1` + `p` + action Button |
-| Section order (dashboard) | KPI -> Chart -> Table (fixed) |
-| Section order (detail) | KPI -> Chart -> Related Table (fixed) |
-| Form page | Back button required, one Card per form |
-| Chart grid | Dashboard MUST use `lg:grid-cols-2` |
 
-// WHY: Fixed section ordering creates a predictable scan pattern across all page types. Users always
-// know where to find KPIs (top), charts (middle), and tables (bottom).
+**기본값** (특별한 지시 없으면 이대로 생성, 사용자 지시 시 변경 가능):
+| Rule | Default | Override example |
+|------|---------|-----------------|
+| Section order (dashboard) | KPI -> Chart -> Table | "차트를 먼저 배치해줘" |
+| Section order (detail) | KPI -> Chart -> Related Table | "테이블만 보여줘" |
+| Form page | Back button + single Card | 모달 폼, 위저드 폼 |
+| Chart grid (dashboard) | `lg:grid-cols-2` | 단일 차트 full-width, 비대칭 `lg:grid-cols-[2fr_1fr]` |
+| List page | Table only, no KPI/Chart | "상단에 요약 KPI 추가해줘" |
+
+// WHY: 기본 섹션 순서는 예측 가능한 스캔 패턴을 만든다. 하지만 각 프로젝트/페이지의 요구에 따라 변경할 수 있다.
 
 ---
 
@@ -76,12 +81,14 @@ import { DataTable } from "@/components/composed"
 </div>
 ```
 
-// FORBIDDEN:
-// - Adding KpiCard or ChartSection to a list page -- KPIs and charts belong on Dashboard/Detail pages
+// FORBIDDEN (절대 규칙):
 // - Wrapping the page header in a Card -- page headers are plain divs
 // - Placing filter inputs outside the Card -- filters are part of the table's context
 // - Using DataTable without a Card wrapper -- see @.claude/rules/cards.md CARD-03b
 // - Omitting CardHeader on the table Card -- every Card needs at least a CardTitle
+//
+// DEFAULT (기본값 -- 사용자 지시 시 변경 가능):
+// - List page는 테이블만 포함 (사용자 요청 시 KPI/Chart 추가 가능)
 
 ---
 
@@ -94,7 +101,7 @@ Section order is fixed: KPI -> Chart -> Table.
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardAction } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ChartContainer } from "@/components/ui/chart"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { ArrowLeftIcon } from "lucide-react"
 import { DataTable, KpiCard } from "@/components/composed"
 import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
@@ -127,17 +134,17 @@ import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
       <CardHeader>
         <CardTitle>Daily Spend</CardTitle>
         <CardAction>
-          <Select>...</Select>
+          {/* Period Select — see cards.md CARD-02 for full pattern */}
         </CardAction>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={spendChartConfig}>
-          <LineChart data={spendData}>
-            <CartesianGrid stroke="var(--border)" />
-            <XAxis stroke="var(--muted-foreground)" />
-            <YAxis stroke="var(--muted-foreground)" />
-            <Tooltip contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", color: "var(--card-foreground)" }} />
-            <Line stroke="var(--chart-1)" />
+        <ChartContainer config={spendChartConfig} className="min-h-[200px] w-full">
+          <LineChart accessibilityLayer data={spendData}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
+            <YAxis tickLine={false} axisLine={false} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Line dataKey="spend" stroke="var(--color-spend)" />
           </LineChart>
         </ChartContainer>
       </CardContent>
@@ -146,14 +153,14 @@ import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
       <CardHeader>
         <CardTitle>Channel Split</CardTitle>
         <CardAction>
-          <Select>...</Select>
+          {/* Period Select — see cards.md CARD-02 for full pattern */}
         </CardAction>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={channelChartConfig}>
-          <PieChart>
-            <Pie data={channelData} fill="var(--chart-2)" />
-            <Tooltip contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", color: "var(--card-foreground)" }} />
+        <ChartContainer config={channelChartConfig} className="min-h-[200px] w-full">
+          <PieChart accessibilityLayer>
+            <Pie data={channelData} dataKey="value" nameKey="channel" fill="var(--color-channel)" />
+            <ChartTooltip content={<ChartTooltipContent />} />
           </PieChart>
         </ChartContainer>
       </CardContent>
@@ -173,20 +180,23 @@ import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
 </div>
 ```
 
-// FORBIDDEN:
-// - Placing DataTable before ChartSection or KPI cards -- section order is KPI -> Chart -> Table
-// - Omitting the back button on detail pages -- users must be able to navigate back
+// FORBIDDEN (절대 규칙):
 // - Wrapping the page header in a Card -- page headers are plain divs
-// - Placing Badge outside the page header area -- status belongs in the header
-// - Using hardcoded hex/rgb in chart props -- use `var(--chart-N)` tokens
-// - Using TabGroup to wrap sections -- flat KPI -> Chart -> Table sequence only
+// - Using hardcoded hex/rgb in chart props -- define colors in chartConfig, reference as var(--color-KEY)
+// - Using raw Recharts `<Tooltip>` or `contentStyle` -- use `<ChartTooltip content={<ChartTooltipContent />} />`
+// - Passing stroke to CartesianGrid/XAxis/YAxis -- ChartContainer handles axis styling
+//
+// DEFAULT (기본값 -- 사용자 지시 시 변경 가능):
+// - Section order: KPI -> Chart -> Table
+// - Back button on detail pages
+// - Badge placement in page header area
 
 ---
 
 ## PAGE-03 -- Form / Settings Page
 
-Form pages use a single Card to wrap the entire form. Back button is required.
-One form = one Card. Multiple sections = multiple FieldSets inside one Card, NOT multiple Cards.
+Form pages wrap the form inside a Card. Default: back button + single Card.
+Multiple sections = FieldSets inside one Card. 위저드/멀티스텝 또는 복수 독립 폼에서는 복수 Card 허용.
 
 ```tsx
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
@@ -277,26 +287,28 @@ import { ArrowLeftIcon } from "lucide-react"
 </div>
 ```
 
-// FORBIDDEN:
-// - Omitting the back button on form pages -- users must be able to navigate back
-// - Using multiple Cards for form sections -- one form = one Card; use FieldSet + FieldSeparator
-// - Placing submit/cancel buttons inside CardContent -- buttons belong in CardFooter
-// - Placing Save before Cancel -- Cancel (outline) always precedes Save (submit)
+// FORBIDDEN (절대 규칙):
 // - Rendering a form without a Card wrapper -- Card provides visual boundary and footer placement
 // - Using bare Input outside Field in form context -- Field provides label, description, and error
-// - Omitting `form="campaign-form"` on the submit button -- links CardFooter button to form in CardContent
+// - Omitting `form="form-id"` on the submit button -- links CardFooter button to form in CardContent
+// - Placing submit/cancel buttons inside CardContent -- buttons belong in CardFooter
+//
+// DEFAULT (기본값 -- 사용자 지시 시 변경 가능):
+// - Back button on form pages
+// - Single Card per form (위저드/멀티스텝은 복수 Card 허용)
+// - Button order: 보조(outline) → 주요(default)
 
 ---
 
 ## PAGE-04 -- Dashboard Overview Page
 
-Dashboard pages show a high-level summary. Section order is fixed: KPI -> Chart -> Recent Table.
-Chart grid MUST use `lg:grid-cols-2` on dashboards.
+Dashboard pages show a high-level summary.
+Default section order: KPI -> Chart -> Recent Table. Default chart grid: `lg:grid-cols-2`.
 
 ```tsx
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardAction } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChartContainer } from "@/components/ui/chart"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { DataTable, KpiCard } from "@/components/composed"
 import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
 
@@ -324,17 +336,17 @@ import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
         <CardTitle>Daily Spend</CardTitle>
         <CardDescription>Last 30 days of ad spend</CardDescription>
         <CardAction>
-          <Select>...</Select>
+          {/* Period Select — see cards.md CARD-02 for full pattern */}
         </CardAction>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={spendChartConfig}>
-          <LineChart data={spendData}>
-            <CartesianGrid stroke="var(--border)" />
-            <XAxis stroke="var(--muted-foreground)" />
-            <YAxis stroke="var(--muted-foreground)" />
-            <Tooltip contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", color: "var(--card-foreground)" }} />
-            <Line stroke="var(--chart-1)" />
+        <ChartContainer config={spendChartConfig} className="min-h-[200px] w-full">
+          <LineChart accessibilityLayer data={spendData}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
+            <YAxis tickLine={false} axisLine={false} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Line dataKey="spend" stroke="var(--color-spend)" />
           </LineChart>
         </ChartContainer>
       </CardContent>
@@ -344,17 +356,17 @@ import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
         <CardTitle>Channel Split</CardTitle>
         <CardDescription>Spend distribution by channel</CardDescription>
         <CardAction>
-          <Select>...</Select>
+          {/* Period Select — see cards.md CARD-02 for full pattern */}
         </CardAction>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={channelChartConfig}>
-          <BarChart data={channelData}>
-            <CartesianGrid stroke="var(--border)" />
-            <XAxis stroke="var(--muted-foreground)" />
-            <YAxis stroke="var(--muted-foreground)" />
-            <Tooltip contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", color: "var(--card-foreground)" }} />
-            <Bar fill="var(--chart-2)" />
+        <ChartContainer config={channelChartConfig} className="min-h-[200px] w-full">
+          <BarChart accessibilityLayer data={channelData}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="channel" tickLine={false} tickMargin={10} axisLine={false} />
+            <YAxis tickLine={false} axisLine={false} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar dataKey="spend" fill="var(--color-spend)" radius={4} />
           </BarChart>
         </ChartContainer>
       </CardContent>
@@ -374,13 +386,18 @@ import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
 </div>
 ```
 
-// FORBIDDEN:
-// - Using `lg:grid-cols-1` for charts on a dashboard -- dashboard charts MUST be 2-column
-// - Omitting KpiCard section -- dashboards always show KPI summary first
-// - Placing DataTable before chart section -- section order is KPI -> Chart -> Table
+// FORBIDDEN (절대 규칙):
 // - Wrapping page header in a Card -- page headers are plain divs
-// - Using hardcoded hex/rgb in chart props -- use `var(--chart-N)` tokens
+// - Using hardcoded hex/rgb in chart props -- define colors in chartConfig, reference as var(--color-KEY)
+// - Using raw Recharts `<Tooltip>` or `contentStyle` -- use `<ChartTooltip content={<ChartTooltipContent />} />`
+// - Passing stroke to CartesianGrid/XAxis/YAxis -- ChartContainer handles axis styling
 // - Using ChartContainer without Card wrapper -- charts live inside Card > CardContent
+// - Omitting min-h-[VALUE] on ChartContainer -- required for responsive sizing
+//
+// DEFAULT (기본값 -- 사용자 지시 시 변경 가능):
+// - Chart grid: lg:grid-cols-2 (단일 차트 full-width, 비대칭 레이아웃 허용)
+// - KPI section first
+// - Section order: KPI -> Chart -> Table
 
 ---
 
@@ -389,7 +406,7 @@ import { formatCurrencyCompact, formatCompact, formatDelta } from "@/lib/format"
 | Pattern | Grid Classes | Use |
 |---------|-------------|-----|
 | KPI 4-col | `grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4` | KPI card grid on dashboard and detail pages |
-| Chart 2-col | `grid grid-cols-1 gap-4 lg:grid-cols-2` | Chart grid on dashboard (required) and detail pages |
+| Chart 2-col | `grid grid-cols-1 gap-4 lg:grid-cols-2` | Chart grid on dashboard (default) and detail pages |
 | Chart asymmetric | `grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]` | Main chart + secondary chart |
 | Form 2-col fields | `grid grid-cols-1 gap-4 sm:grid-cols-2` | Side-by-side fields inside FieldSet |
 | Form 1-col | Single Card, full width | Standard form page |

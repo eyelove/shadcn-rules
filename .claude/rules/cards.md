@@ -69,24 +69,26 @@ Chart cards wrap a single visualization with an optional period selector in the 
     <CardTitle>Daily Spend</CardTitle>
     <CardDescription>Last 30 days of ad spend</CardDescription>
     <CardAction>
-      <Select options={periodOptions} />
+      <Select>
+        <SelectTrigger className="w-[140px]">
+          <SelectValue placeholder="Period" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="7d">Last 7 days</SelectItem>
+          <SelectItem value="30d">Last 30 days</SelectItem>
+        </SelectContent>
+      </Select>
     </CardAction>
   </CardHeader>
   <CardContent>
-    <ChartContainer config={chartConfig}>
-      <LineChart data={data}>
-        <CartesianGrid stroke="var(--border)" />
-        <XAxis stroke="var(--muted-foreground)" />
-        <YAxis stroke="var(--muted-foreground)" />
-        <Tooltip
-          contentStyle={{
-            backgroundColor: "var(--card)",
-            borderColor: "var(--border)",
-            color: "var(--card-foreground)",
-          }}
-        />
-        <Line stroke="var(--chart-1)" />
-        <Line stroke="var(--chart-2)" />
+    <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+      <LineChart accessibilityLayer data={data}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
+        <YAxis tickLine={false} axisLine={false} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Line dataKey="desktop" stroke="var(--color-desktop)" />
+        <Line dataKey="mobile" stroke="var(--color-mobile)" />
       </LineChart>
     </ChartContainer>
   </CardContent>
@@ -94,10 +96,14 @@ Chart cards wrap a single visualization with an optional period selector in the 
 ```
 
 **Rules:**
-- Chart colors MUST use token vars: `var(--chart-1)` through `var(--chart-6)`
+- Chart colors are defined in `chartConfig` and referenced as `var(--color-KEY)` on chart elements
+- `ChartContainer` MUST have `min-h-[VALUE]` or `aspect-*` for responsive sizing
+- `accessibilityLayer` on the chart root for keyboard/screen reader support
 - Period selector (Select or ToggleGroup) goes in CardAction, not above the chart
-- Tooltip contentStyle is the ONLY allowed inline style — values MUST be token vars
-// WHY: Centralizing the period control in CardAction keeps the header scannable and avoids raw div toolbars.
+- Use `<ChartTooltip content={<ChartTooltipContent />} />` — NEVER raw Recharts `<Tooltip>` or `contentStyle`
+- Use `<ChartLegend content={<ChartLegendContent />} />` when a legend is needed
+- Axis/Grid styling is handled by `ChartContainer` internally — do NOT pass `stroke` props to `CartesianGrid`, `XAxis`, `YAxis`
+// WHY: shadcn's ChartContainer handles axis/grid theming. Manual stroke props bypass this and create maintenance burden.
 
 ---
 
@@ -145,7 +151,15 @@ Four sub-patterns depending on complexity.
   <CardContent>
     <div className="flex items-center gap-2 pb-4">
       <Input placeholder="Filter by name..." />
-      <Select options={statusOptions} />
+      <Select>
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="active">Active</SelectItem>
+          <SelectItem value="paused">Paused</SelectItem>
+        </SelectContent>
+      </Select>
     </div>
     <DataTable columns={columns} data={filteredRows} />
   </CardContent>
@@ -225,20 +239,20 @@ Form cards embed a form inside a Card, typically on settings or edit pages.
           <FieldLegend>Basic Info</FieldLegend>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field>
-              <FieldLabel htmlFor="name">Name</FieldLabel>
-              <Input id="name" />
+              <FieldLabel>Name</FieldLabel>
+              <Input name="name" />
             </Field>
             <Field>
-              <FieldLabel htmlFor="status">Status</FieldLabel>
-              <Select>
-                <SelectTrigger id="status"><SelectValue /></SelectTrigger>
+              <FieldLabel>Status</FieldLabel>
+              <Select name="status">
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{/* status options */}</SelectContent>
               </Select>
             </Field>
           </div>
           <Field>
-            <FieldLabel htmlFor="description">Description</FieldLabel>
-            <Textarea id="description" />
+            <FieldLabel>Description</FieldLabel>
+            <Textarea name="description" />
             <FieldDescription>Optional notes</FieldDescription>
           </Field>
         </FieldSet>
@@ -254,8 +268,7 @@ Form cards embed a form inside a Card, typically on settings or edit pages.
 
 **Rules:**
 - The `<form>` gets an `id` attribute; submit button uses `form="campaign-form"` to link from CardFooter
-- Cancel (outline) ALWAYS precedes Save (submit) — see @.claude/rules/fields.md
-- CardFooter replaces old FormActions pattern
+- Action buttons go in CardFooter, linked via `form="form-id"` — see @.claude/rules/fields.md for button rules
 // WHY: Separating the form body (CardContent) from action buttons (CardFooter) keeps buttons pinned at the card bottom regardless of form length.
 
 For full form hierarchy rules, see: @.claude/rules/fields.md

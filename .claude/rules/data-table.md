@@ -190,7 +190,7 @@ const columns: DataTableColumn<Campaign>[] = [
     sortable: true,
     align: "right",
     cell: (row) => (
-      <span className="tabular-nums">{formatNumber(row.impressions)}</span>
+      <span className="tabular-nums">{formatNumber(row.impressions, { locale: "ko-KR" })}</span>
     ),
   },
 
@@ -201,7 +201,7 @@ const columns: DataTableColumn<Campaign>[] = [
     sortable: true,
     align: "right",
     cell: (row) => (
-      <span className="tabular-nums">{formatNumber(row.clicks)}</span>
+      <span className="tabular-nums">{formatNumber(row.clicks, { locale: "ko-KR" })}</span>
     ),
   },
 
@@ -212,7 +212,7 @@ const columns: DataTableColumn<Campaign>[] = [
     sortable: true,
     align: "right",
     cell: (row) => (
-      <span className="tabular-nums">{formatPercent(row.ctr)}</span>
+      <span className="tabular-nums">{formatPercent(row.ctr, { locale: "ko-KR" })}</span>
     ),
   },
 
@@ -223,7 +223,7 @@ const columns: DataTableColumn<Campaign>[] = [
     sortable: true,
     align: "right",
     cell: (row) => (
-      <span className="tabular-nums font-medium">{formatCurrency(row.spend)}</span>
+      <span className="tabular-nums font-medium">{formatCurrency(row.spend, { locale: "ko-KR", currency: "KRW" })}</span>
     ),
   },
 
@@ -234,7 +234,7 @@ const columns: DataTableColumn<Campaign>[] = [
     sortable: true,
     align: "right",
     cell: (row) => (
-      <span className="tabular-nums">{formatCurrency(row.cpa)}</span>
+      <span className="tabular-nums">{formatCurrency(row.cpa, { locale: "ko-KR", currency: "KRW" })}</span>
     ),
   },
 
@@ -287,10 +287,10 @@ const columns: DataTableColumn<Campaign>[] = [
 // WHY: This canonical example demonstrates every column type in correct order. Copy and adapt
 // for new tables — do not invent a new column structure from scratch.
 
-**Format utilities** referenced above are imported from `@/lib/format`:
-- `formatNumber(value)` — locale-aware number with thousand separators
-- `formatCurrency(value)` — currency with symbol and decimals
-- `formatPercent(value)` — percentage with fixed decimal places
+**Format utilities** referenced above are imported from `@/lib/format`. Always pass explicit locale (see @.claude/rules/formatting.md FMT-03):
+- `formatNumber(value, { locale })` — locale-aware number with thousand separators
+- `formatCurrency(value, { locale, currency })` — currency with symbol and decimals
+- `formatPercent(value, { locale })` — percentage with fixed decimal places
 
 For full format utility documentation, see: @.claude/rules/formatting.md
 
@@ -302,8 +302,11 @@ For full format utility documentation, see: @.claude/rules/formatting.md
   <DataTable columns={columns} data={rows} />
 </div>
 
-// CORRECT — DataTable inside Card > CardContent
+// CORRECT — DataTable inside Card with CardHeader
 <Card>
+  <CardHeader>
+    <CardTitle>Campaigns</CardTitle>
+  </CardHeader>
   <CardContent>
     <DataTable columns={columns} data={rows} />
   </CardContent>

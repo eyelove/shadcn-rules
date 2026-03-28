@@ -65,20 +65,20 @@ Run `bash scripts/check-rules.sh tests/samples/` first. This checklist covers st
 
 | Rule | Expected | Actual | Pass/Fail |
 |------|----------|--------|-----------|
-| FORB-01 | No style={{}} on any element | `contentStyle={{...}}` is a recharts Tooltip prop (not a DOM style attribute) — no DOM style={{}} present | Pass |
-| FORB-02 | No hex/rgb/oklch literals | No hex/rgb/oklch literals; var(--token) used for chart colors | Pass |
-| FORB-03 | No <div className="flex..."> layout wrappers | No raw div layout wrappers found | Pass |
-| FORB-04 | No import from @/components/ui/ | Not present | Pass |
-| FORB-05 | No bare <Input> outside <FormField> | No Input elements used (detail page, no form) | Pass |
+| FORB-01 | No style={{}} on any element | Check for `style={{`, `contentStyle={{`, and `stroke=` on CartesianGrid/XAxis/YAxis. Use `ChartTooltip` + `ChartTooltipContent` for tooltips. ChartContainer handles axis styling. | — |
+| FORB-02 | No hex/rgb/oklch literals | No hex/rgb/oklch literals; colors defined in chartConfig, referenced as var(--color-KEY) | — |
+| FORB-03 | No <div className="flex..."> layout wrappers | No raw div layout wrappers found | — |
+| FORB-04 | No import from @/components/ui/ | Not present | — |
+| FORB-05 | No bare <Input> outside <FormField> | No Input elements used (detail page, no form) | — |
 
 ### Naming
 
 | Rule | Expected | Actual | Pass/Fail |
 |------|----------|--------|-----------|
-| NAME-01 | File named campaign-detail.tsx (kebab-case) | campaign-detail.tsx | Pass |
-| NAME-02 | Import from @/components/composed (barrel) | `from "@/components/composed"` (barrel) | Pass |
+| NAME-01 | File named campaign-detail.tsx (kebab-case) | campaign-detail.tsx | — |
+| NAME-02 | Import from @/components/composed (barrel) | `from "@/components/composed"` (barrel) | — |
 
-**Score: 14/14 Pass | Critical violations: 0**
+**Score: —/14 | Evaluate against generated samples**
 
 ---
 
@@ -136,11 +136,11 @@ Run `bash scripts/check-rules.sh tests/samples/` first. This checklist covers st
 
 | Rule | Expected | Actual | Pass/Fail |
 |------|----------|--------|-----------|
-| FORB-01 | No style={{}} on any element | `contentStyle={{...}}` is a recharts Tooltip prop (not DOM style={{}}); no DOM style={{}} present | Pass |
-| FORB-02 | No hex/rgb/oklch literals | No hex/rgb/oklch literals; var(--token) used for chart colors | Pass |
-| FORB-03 | No <div className="flex..."> layout wrappers | No raw div layout wrappers found | Pass |
-| FORB-04 | No import from @/components/ui/ | Not present | Pass |
-| FORB-05 | No bare <Input> outside <FormField> | No Input elements used (dashboard page, no form) | Pass |
+| FORB-01 | No style={{}} on any element | Check for `style={{`, `contentStyle={{`, and `stroke=` on CartesianGrid/XAxis/YAxis. Use `ChartTooltip` + `ChartTooltipContent`. ChartContainer handles axis styling. | — |
+| FORB-02 | No hex/rgb/oklch literals | No hex/rgb/oklch literals; colors defined in chartConfig, referenced as var(--color-KEY) | — |
+| FORB-03 | No <div className="flex..."> layout wrappers | No raw div layout wrappers found | — |
+| FORB-04 | No import from @/components/ui/ | Not present | — |
+| FORB-05 | No bare <Input> outside <FormField> | No Input elements used (dashboard page, no form) | — |
 
 ### Naming
 
@@ -168,13 +168,21 @@ Run `bash scripts/check-rules.sh tests/samples/` first. This checklist covers st
 
 None. All 4 samples passed every check.
 
-### Notes on Recharts contentStyle
+### Notes on Chart Component Rules
 
-`contentStyle={{...}}` in Tooltip components (campaign-detail.tsx, dashboard-overview.tsx) is a recharts library prop, not a DOM `style={{}}` attribute. It accepts an object to style the tooltip popup and is the only supported API for that component. This is correct usage — it does not violate FORB-01 (which targets direct DOM style attributes on layout elements). The check-rules.sh script correctly passes both files.
+Per shadcn official documentation, charts MUST use shadcn's chart components:
+- `ChartTooltip` + `ChartTooltipContent` for tooltips (NOT raw Recharts `<Tooltip>` with `contentStyle`)
+- `ChartLegend` + `ChartLegendContent` for legends
+- `ChartContainer` with `min-h-[VALUE]` for responsive sizing
+- `accessibilityLayer` on chart root for keyboard/screen reader support
+
+Recharts `contentStyle={{...}}` is a FORB-01 violation — even though it is a library prop, shadcn provides `ChartTooltip` as the replacement. Similarly, do NOT pass `stroke` props to `CartesianGrid`, `XAxis`, `YAxis` — `ChartContainer` handles axis/grid theming internally.
+
+Chart colors should be defined in `chartConfig` and referenced as `var(--color-KEY)`, not directly as `var(--chart-N)` on elements.
 
 ### Next Step
 
-All checks pass. Rule system verified.
+Evaluate generated samples against updated rules.
 
 ---
 

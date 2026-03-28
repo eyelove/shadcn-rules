@@ -246,7 +246,9 @@ FieldLabel and FieldDescription side by side.
 ```tsx
 import { Field, FieldLabel, FieldContent, FieldDescription } from "@/components/ui/field"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Switch } from "@/components/ui/switch"
 
+// Checkbox — discrete on/off (e.g., agree to terms, multi-select options)
 <Field orientation="horizontal">
   <Checkbox name="notifications" />
   <FieldContent>
@@ -254,35 +256,43 @@ import { Checkbox } from "@/components/ui/checkbox"
     <FieldDescription>Receive email alerts when campaign status changes.</FieldDescription>
   </FieldContent>
 </Field>
+
+// Switch — toggle with immediate effect (e.g., enable/disable a feature)
+<Field orientation="horizontal">
+  <Switch name="autoOptimize" />
+  <FieldContent>
+    <FieldLabel>Auto Optimize</FieldLabel>
+    <FieldDescription>Automatically adjust bids based on performance.</FieldDescription>
+  </FieldContent>
+</Field>
 ```
 
-// WHY: orientation="horizontal" aligns the checkbox and label on the same row. FieldContent
+// WHY: orientation="horizontal" aligns the control and label on the same row. FieldContent
 // groups the label + description so they wrap together next to the control.
+// Checkbox = form submission용 선택, Switch = 즉시 반영되는 토글. 용도에 맞게 선택한다.
 
 ---
 
 ## CardFooter Button Rules
 
-- Cancel (variant="outline", type="button") ALWAYS before Save (type="submit")
+**원칙:**
+- 주요 액션(Submit, Delete 등)은 `variant`로 시각적 구분 (default for submit, destructive for delete)
+- 보조 액션(Cancel, Reset 등)은 `variant="outline"` 사용
 - Submit button uses `form="form-id"` attribute to link to the form in CardContent
 - CardFooter gets `className="border-t"` for visual separation
+- 버튼 배치(순서, 좌/우/중앙 정렬)는 프로젝트 컨벤션에 따라 자유롭게 설정 가능
+- 3개 이상 버튼도 허용 (예: Cancel + Save Draft + Publish)
 
+**기본값** (특별한 지시 없으면):
 ```tsx
-// CORRECT — Cancel before Save, form id linking
 <CardFooter className="border-t">
   <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
   <Button type="submit" form="campaign-form">Save</Button>
-</CardFooter>
-
-// FORBIDDEN — reversed order
-<CardFooter className="border-t">
-  <Button type="submit" form="campaign-form">Save</Button>
-  <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
 </CardFooter>
 ```
 
-// WHY: Dismissive action (Cancel) before primary action (Save) is a consistent pattern that
-// prevents accidental submissions. form id linking keeps buttons outside the form element.
+// WHY: 주요 액션은 시각적으로 구분되어야 사용자가 결과를 예측할 수 있다.
+// form id linking keeps buttons outside the form element.
 
 ---
 
@@ -361,17 +371,18 @@ NEVER use Input, Select, Textarea, or Checkbox outside a Field wrapper in form c
 
 ### Card-per-Section Splitting
 
-NEVER use multiple Cards to represent sections within a single form.
-// WHY: Multiple Cards break the single-form model. Use FieldSet + FieldSeparator for sectioning within one Card.
+**기본값**: 단일 폼은 하나의 Card 안에 FieldSet + FieldSeparator로 섹션을 나눈다.
+**허용**: 위저드/멀티스텝 폼에서 각 스텝이 독립 Card로 분리되거나, 페이지에 복수의 독립 폼이 존재하는 경우 복수 Card 허용.
+// WHY: 기본적으로 하나의 Card가 폼의 시각적 경계를 명확히 한다. 다만 복잡한 폼 구조에서는 분리가 필요할 수 있다.
 
 ```tsx
-// FORBIDDEN — multiple Cards for form sections
+// AVOID — 단일 폼을 여러 Card로 분리 (기본값에서는 비권장)
 <Card><CardHeader><CardTitle>Basic Info</CardTitle></CardHeader>
   <CardContent><Field>...</Field></CardContent></Card>
 <Card><CardHeader><CardTitle>Targeting</CardTitle></CardHeader>
   <CardContent><Field>...</Field></CardContent></Card>
 
-// CORRECT — one Card, multiple FieldSets
+// DEFAULT — single Card, multiple FieldSets (특별한 지시 없으면 이 패턴)
 <Card>
   <CardHeader><CardTitle>Campaign Settings</CardTitle></CardHeader>
   <CardContent>
@@ -412,18 +423,18 @@ NEVER place the submit button inside CardContent. It belongs in CardFooter.
 </CardFooter>
 ```
 
-### Button Order Reversed
+### Button Variant 미구분
 
-NEVER place Save before Cancel.
+주요 액션과 보조 액션은 반드시 variant로 시각적으로 구분해야 한다. 배치 순서와 정렬은 프로젝트 컨벤션에 따른다.
 
 ```tsx
-// FORBIDDEN
+// FORBIDDEN — 모든 버튼이 같은 variant
 <CardFooter className="border-t">
+  <Button type="button">Cancel</Button>
   <Button type="submit" form="my-form">Save</Button>
-  <Button variant="outline" type="button">Cancel</Button>
 </CardFooter>
 
-// CORRECT
+// CORRECT — variant로 역할 구분 (기본값: 보조 → 주요 순서)
 <CardFooter className="border-t">
   <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
   <Button type="submit" form="my-form">Save</Button>

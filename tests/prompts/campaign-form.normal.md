@@ -3,6 +3,15 @@ type: normal
 page: campaign-form
 template: PAGE-03
 expected_violations: 0
+expected_ui:
+  - card
+  - button
+  - input
+  - textarea
+  - select
+  - field
+expected_composed: []
+expected_lib: []
 ---
 
 # Campaign Form 페이지 생성
@@ -37,5 +46,7 @@ expected_violations: 0
 - 로케일: en-US
 
 ## 출력
-- 파일명: `tests/samples/campaign-form.normal.tsx`
-- 단일 파일, 목 데이터 인라인
+- 파일 위치: `preview/src/pages/campaign-form.normal.tsx`
+- 필요한 shadcn 컴포넌트를 직접 설치하세요 (`npx shadcn add ...`)
+- App.tsx에 라우팅을 연결하세요
+- 단일 페이지 컴포넌트, 목 데이터 인라인
