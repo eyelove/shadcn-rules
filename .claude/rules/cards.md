@@ -225,53 +225,9 @@ For full DataTable column definitions and render function rules, see: @.claude/r
 ### CARD-04 — Form Card
 
 Form cards embed a form inside a Card, typically on settings or edit pages.
+`<form>` gets an `id` attribute; submit button uses `form="form-id"` to link from CardFooter.
 
-```tsx
-<Card>
-  <CardHeader>
-    <CardTitle>Campaign Settings</CardTitle>
-    <CardDescription>Update campaign configuration</CardDescription>
-  </CardHeader>
-  <CardContent>
-    <form id="campaign-form" onSubmit={handleSubmit}>
-      <FieldGroup>
-        <FieldSet>
-          <FieldLegend>Basic Info</FieldLegend>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field>
-              <FieldLabel>Name</FieldLabel>
-              <Input name="name" />
-            </Field>
-            <Field>
-              <FieldLabel>Status</FieldLabel>
-              <Select name="status">
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{/* status options */}</SelectContent>
-              </Select>
-            </Field>
-          </div>
-          <Field>
-            <FieldLabel>Description</FieldLabel>
-            <Textarea name="description" />
-            <FieldDescription>Optional notes</FieldDescription>
-          </Field>
-        </FieldSet>
-      </FieldGroup>
-    </form>
-  </CardContent>
-  <CardFooter>
-    <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
-    <Button type="submit" form="campaign-form">Save</Button>
-  </CardFooter>
-</Card>
-```
-
-**Rules:**
-- The `<form>` gets an `id` attribute; submit button uses `form="campaign-form"` to link from CardFooter
-- Action buttons go in CardFooter, linked via `form="form-id"` — see @.claude/rules/fields.md for button rules
-// WHY: Separating the form body (CardContent) from action buttons (CardFooter) keeps buttons pinned at the card bottom regardless of form length.
-
-For full form hierarchy rules, see: @.claude/rules/fields.md
+Full form hierarchy, Field patterns, and code examples: @.claude/rules/fields.md
 
 ---
 
