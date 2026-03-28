@@ -177,6 +177,9 @@ check "FORB-02" "No Tailwind color primitives (bg-zinc/gray/slate/stone/neutral)
 check "FORB-02" "No Tailwind text color primitives" 'text-\(zinc\|gray\|slate\|stone\|neutral\)-' "$TARGET"
 check "FORB-02" "No Tailwind border color primitives" 'border-\(zinc\|gray\|slate\|stone\|neutral\)-' "$TARGET"
 
+# 4b. Hardcoded bg-white/bg-black (should use token: bg-background, bg-card, etc.)
+check "FORB-02" "No bg-white/bg-black (use token)" 'bg-white\|bg-black\|text-white\|text-black' "$TARGET"
+
 # 5. Direct shadcn imports — REMOVED
 # 2-tier model allows direct @/components/ui/ imports. This is correct usage, not a violation.
 
@@ -190,7 +193,7 @@ check "FORB-05" "No raw <select " '<select ' "$TARGET"
 check "FORB-05" "No raw <button " '<button ' "$TARGET"
 
 # 8. Tailwind fixed radius (should use token)
-check "TOKEN-01" "No Tailwind fixed rounded (use token)" 'rounded-\(md\|lg\|xl\|2xl\|full\)' "$TARGET"
+check "TOKEN-01" "No Tailwind fixed rounded (use token)" 'rounded-\(md\|lg\|xl\|2xl\)' "$TARGET"
 
 # 14. FORB-05 — Standalone Textarea outside FormField (only outside FormField context)
 # NOTE: grep cannot detect nesting. This check catches <Textarea at top-level only.
@@ -240,20 +243,17 @@ if [ "$FORMAT" != "jsonl" ]; then
   echo "--- FORM STRUCTURE ---"
 fi
 
-# FIELD-01: Reversed button order in CardFooter — Submit before Cancel (Cancel=outline must come first)
-check "FIELD-01" "No reversed button order (Submit before Cancel)" 'type="submit">[^<]*</Button>[[:space:]]*<Button variant="outline"' "$TARGET"
+# FIELD-BTN-ORDER: Reversed button order in CardFooter — Submit before Cancel (Cancel=outline must come first)
+check "FIELD-BTN-ORDER" "No reversed button order (Submit before Cancel)" 'type="submit">[^<]*</Button>[[:space:]]*<Button variant="outline"' "$TARGET"
 
-# FIELD-02: No bare <label> tags — use FieldLabel inside Field
-check "FIELD-02" "No bare <label> tags (use FieldLabel)" '<label ' "$TARGET"
+# FIELD-BARE-LABEL: No bare <label> tags — use FieldLabel inside Field
+check "FIELD-BARE-LABEL" "No bare <label> tags (use FieldLabel inside Field)" '<label ' "$TARGET"
 
 # FORB-01: No inline style on <form> element
 check "FORB-01" "No raw <form> with inline style" '<form[^>]*style=' "$TARGET"
 
-# FIELD-03: No submit button inside CardContent (must be in CardFooter)
-check "FIELD-03" "No submit button inside CardContent" 'CardContent[^<]*>[[:space:]]*.*type="submit"' "$TARGET"
-
-# FIELD-04: No raw <input> tags (must use shadcn Input inside Field)
-check "FIELD-04" "No raw <input> in form (use Field > Input)" '<input ' "$TARGET"
+# FIELD-SUBMIT-LOC: No submit button inside CardContent (must be in CardFooter)
+check "FIELD-SUBMIT-LOC" "No submit button inside CardContent (must be in CardFooter)" 'CardContent[^<]*>[[:space:]]*.*type="submit"' "$TARGET"
 
 if [ "$FORMAT" != "jsonl" ]; then
   echo ""

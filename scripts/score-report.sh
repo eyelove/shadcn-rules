@@ -1,18 +1,16 @@
 #!/bin/bash
-# Score report generator for shadcn-rules
-# Reads JSONL from check-rules.sh and produces terminal summary + markdown report
+# Score report generator for shadcn-rules (v3 — A/B comparison)
+# Reads JSONL from check-rules.sh and produces A/B comparison report
 #
 # Usage:
-#   bash scripts/score-report.sh results.jsonl [expected_violations.txt]
-#   cat results.jsonl | bash scripts/score-report.sh - [expected_violations.txt]
+#   bash scripts/score-report.sh results.jsonl [output-dir] [build-pass]
 
 set -euo pipefail
 
 # --- Arguments ---
-INPUT="${1:?Usage: score-report.sh <results.jsonl | -> [expected_violations.txt]}"
-EXPECTED="${2:-}"
-OUTPUT_DIR="${3:-}"
-BUILD_PASS="${4:-true}"
+INPUT="${1:?Usage: score-report.sh <results.jsonl> [output-dir] [build-pass]}"
+OUTPUT_DIR="${2:-}"
+BUILD_PASS="${3:-true}"
 TODAY=$(date +%Y-%m-%d)
 
 if [ -n "$OUTPUT_DIR" ]; then
@@ -27,21 +25,17 @@ fi
 TMPFILE=$(mktemp /tmp/score-report-input.XXXXXX)
 TMP_SUMMARY=$(mktemp /tmp/score-report-summary.XXXXXX)
 TMP_HEATMAP=$(mktemp /tmp/score-report-heatmap.XXXXXX)
-TMP_DETECTION=$(mktemp /tmp/score-report-detection.XXXXXX)
-trap 'rm -f "$TMPFILE" "$TMP_SUMMARY" "$TMP_HEATMAP" "$TMP_DETECTION" "${TMP_DETECTION}.detected" "${TMP_DETECTION}.missed"' EXIT
+TMP_AB=$(mktemp /tmp/score-report-ab.XXXXXX)
+trap 'rm -f "$TMPFILE" "$TMP_SUMMARY" "$TMP_HEATMAP" "$TMP_AB"' EXIT
 
-if [ "$INPUT" = "-" ]; then
-  cat > "$TMPFILE"
-else
-  cp "$INPUT" "$TMPFILE"
-fi
+cp "$INPUT" "$TMPFILE"
 
 if [ ! -s "$TMPFILE" ]; then
   echo "Error: No JSONL data received."
   exit 1
 fi
 
-# --- Step 1: Per-file summary ---
+# --- Step 1: Per-file summary (only page files) ---
 awk '
 BEGIN { nfiles = 0 }
 {
@@ -50,6 +44,10 @@ BEGIN { nfiles = 0 }
   file = line
   sub(/.*"file":"/, "", file)
   sub(/".*/, "", file)
+
+  # Only include page files
+  if (file !~ /\/pages\//) next
+
   # Extract result field
   result = line
   sub(/.*"result":"/, "", result)
@@ -82,12 +80,15 @@ END {
 }
 ' "$TMPFILE" > "$TMP_SUMMARY"
 
-# --- Step 2: Rule violation heatmap (sorted desc) ---
+# --- Step 2: Rule violation heatmap (only without_rules arm for comparison) ---
 awk '
 {
   line = $0
+  file = line; sub(/.*"file":"/, "", file); sub(/".*/, "", file)
   result = line; sub(/.*"result":"/, "", result); sub(/".*/, "", result)
   if (result != "FAIL") next
+  if (file !~ /\/pages\//) next
+  if (file !~ /\.without_rules\./) next
 
   rule = line; sub(/.*"rule":"/, "", rule); sub(/".*/, "", rule)
   desc = line; sub(/.*"desc":"/, "", desc); sub(/".*/, "", desc)
@@ -102,69 +103,95 @@ END {
 }
 ' "$TMPFILE" | sort -rn -t'	' -k1 > "$TMP_HEATMAP"
 
-# --- Step 3: Detection rate (if expected_violations provided) ---
-expected_count=0
-detected_count=0
-missed_count=0
+# --- Step 3: A/B comparison ---
+awk '
+{
+  line = $0
+  file = line; sub(/.*"file":"/, "", file); sub(/".*/, "", file)
+  if (file !~ /\/pages\//) next
 
-if [ -n "$EXPECTED" ] && [ -f "$EXPECTED" ]; then
-  # Build detected file:rule pairs
-  awk '
-  {
-    line = $0
-    result = line; sub(/.*"result":"/, "", result); sub(/".*/, "", result)
-    if (result != "FAIL") next
-    rule = line; sub(/.*"rule":"/, "", rule); sub(/".*/, "", rule)
-    file = line; sub(/.*"file":"/, "", file); sub(/".*/, "", file)
-    n = split(file, parts, "/")
-    bname = parts[n]
-    sub(/\.tsx$/, "", bname)
-    print bname ":" rule
+  result = line; sub(/.*"result":"/, "", result); sub(/".*/, "", result)
+
+  # Determine arm (with_rules or without_rules)
+  arm = "unknown"
+  if (file ~ /\.with_rules\./) arm = "with_rules"
+  else if (file ~ /\.without_rules\./) arm = "without_rules"
+  else next
+
+  # Extract page name (strip arm suffix and .tsx)
+  n = split(file, parts, "/")
+  bname = parts[n]
+  sub(/\.(with|without)_rules\.tsx$/, "", bname)
+
+  key = bname "|" arm
+  if (!(key in pass_c)) { pass_c[key] = 0; fail_c[key] = 0 }
+  if (result == "PASS") pass_c[key]++
+  else if (result == "FAIL") fail_c[key]++
+
+  pages[bname] = 1
+}
+END {
+  for (p in pages) {
+    ka = p "|with_rules"
+    kb = p "|without_rules"
+
+    pa = pass_c[ka] + 0; fa = fail_c[ka] + 0
+    pb = pass_c[kb] + 0; fb = fail_c[kb] + 0
+
+    ta = pa + fa; tb = pb + fb
+    sa = (ta > 0) ? int((pa * 100) / ta) : 0
+    sb = (tb > 0) ? int((pb * 100) / tb) : 0
+    delta = sa - sb
+
+    printf "%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", p, pa, fa, sa, pb, fb, sb, delta
   }
-  ' "$TMPFILE" | sort -u > "${TMP_DETECTION}.detected"
-
-  > "${TMP_DETECTION}.missed"
-
-  while IFS= read -r exp_line; do
-    [ -z "$exp_line" ] && continue
-    case "$exp_line" in \#*) continue ;; esac
-    expected_count=$((expected_count + 1))
-    if grep -qxF "$exp_line" "${TMP_DETECTION}.detected"; then
-      detected_count=$((detected_count + 1))
-    else
-      missed_count=$((missed_count + 1))
-      echo "$exp_line" >> "${TMP_DETECTION}.missed"
-    fi
-  done < "$EXPECTED"
-
-  if [ "$expected_count" -gt 0 ]; then
-    rate=$(( (detected_count * 100) / expected_count ))
-  else
-    rate=0
-  fi
-fi
+}
+' "$TMPFILE" | sort > "$TMP_AB"
 
 # =============================================
 # Terminal Output
 # =============================================
 echo ""
 echo "══════════════════════════════════════════"
-echo " Score Report — ${TODAY}"
+echo " Score Report — ${TODAY} (A/B Test)"
 echo "══════════════════════════════════════════"
 echo ""
 
-printf " %-40s %5s %5s %6s\n" "Page" "PASS" "FAIL" "Score"
-echo " ──────────────────────────────────────────────────────────"
+# Per-file scores
+printf " %-45s %5s %5s %6s\n" "Page" "PASS" "FAIL" "Score"
+echo " ─────────────────────────────────────────────────────────────"
 
 while IFS='	' read -r fname pass fail score; do
-  printf " %-40s %5d %5d  %4d%%\n" "$fname" "$pass" "$fail" "$score"
+  printf " %-45s %5d %5d  %4d%%\n" "$fname" "$pass" "$fail" "$score"
 done < "$TMP_SUMMARY"
+
+# A/B Comparison
+if [ -s "$TMP_AB" ]; then
+  echo ""
+  echo " A/B Comparison:"
+  echo " ─────────────────────────────────────────────────────────────"
+  printf " %-25s %12s %15s %7s %10s\n" "Page" "with_rules" "without_rules" "delta" "verdict"
+  echo " ─────────────────────────────────────────────────────────────"
+
+  while IFS='	' read -r page pa fa sa pb fb sb delta; do
+    if [ "$delta" -ge 20 ]; then
+      verdict="EFFECTIVE"
+    elif [ "$delta" -ge 5 ]; then
+      verdict="MARGINAL"
+    elif [ "$delta" -ge 0 ]; then
+      verdict="NO DIFF"
+    else
+      verdict="NEGATIVE"
+    fi
+    printf " %-25s %10d%%  %13d%%  %+5d%%  %10s\n" "$page" "$sa" "$sb" "$delta" "$verdict"
+  done < "$TMP_AB"
+fi
 
 # Heatmap
 if [ -s "$TMP_HEATMAP" ]; then
   echo ""
   echo " Rule Violation Heatmap:"
-  echo " ──────────────────────────────────────────────────────────"
+  echo " ─────────────────────────────────────────────────────────────"
 
   max_count=$(head -1 "$TMP_HEATMAP" | cut -f1)
   max_bar=40
@@ -185,23 +212,6 @@ if [ -s "$TMP_HEATMAP" ]; then
   done < "$TMP_HEATMAP"
 fi
 
-# Detection rate
-if [ -n "$EXPECTED" ] && [ -f "$EXPECTED" ] && [ "$expected_count" -gt 0 ]; then
-  echo ""
-  echo " Detection Rate (adversarial):"
-  echo " ──────────────────────────────────────────────────────────"
-  printf " Expected: %d  Detected: %d  Missed: %d\n" "$expected_count" "$detected_count" "$missed_count"
-  printf " Rate: %d%%\n" "$rate"
-
-  if [ -s "${TMP_DETECTION}.missed" ]; then
-    echo ""
-    echo " Missed violations:"
-    while IFS= read -r item; do
-      echo "   - $item"
-    done < "${TMP_DETECTION}.missed"
-  fi
-fi
-
 echo ""
 
 # =============================================
@@ -210,9 +220,33 @@ echo ""
 mkdir -p "$REPORT_DIR"
 
 {
-  echo "# Score Report — ${TODAY}"
+  echo "# Score Report — ${TODAY} (A/B Test)"
   echo ""
-  echo "## Summary"
+
+  # A/B Comparison section (primary metric)
+  if [ -s "$TMP_AB" ]; then
+    echo "## A/B Comparison"
+    echo ""
+    echo "| Page | with_rules | without_rules | delta | verdict |"
+    echo "|------|-----------|--------------|-------|---------|"
+    while IFS='	' read -r page pa fa sa pb fb sb delta; do
+      if [ "$delta" -ge 20 ]; then
+        verdict="EFFECTIVE"
+      elif [ "$delta" -ge 5 ]; then
+        verdict="MARGINAL"
+      elif [ "$delta" -ge 0 ]; then
+        verdict="NO DIFF"
+      else
+        verdict="NEGATIVE"
+      fi
+      delta_fmt=$(printf "%+d" "$delta")
+      echo "| ${page} | ${sa}% | ${sb}% | ${delta_fmt}% | ${verdict} |"
+    done < "$TMP_AB"
+    echo ""
+  fi
+
+  # Per-file detail
+  echo "## Per-File Scores"
   echo ""
   echo "| Page | PASS | FAIL | Score |"
   echo "|------|------|------|-------|"
@@ -235,28 +269,30 @@ mkdir -p "$REPORT_DIR"
     echo ""
   fi
 
-  # Failure Details — parse each FAIL line from the JSONL directly
-  fail_count_total=$(grep -c '"result":"FAIL"' "$TMPFILE" 2>/dev/null || true)
-  if [ "$fail_count_total" -gt 0 ]; then
+  # Failure Details — only page files
+  fail_lines=$(grep '"result":"FAIL"' "$TMPFILE" | grep '/pages/' || true)
+
+  if [ -n "$fail_lines" ]; then
     echo "## Failure Details"
     echo ""
 
-    grep '"result":"FAIL"' "$TMPFILE" | while IFS= read -r line; do
+    echo "$fail_lines" | while IFS= read -r line; do
       rule=$(echo "$line" | sed 's/.*"rule":"\([^"]*\)".*/\1/')
       desc=$(echo "$line" | sed 's/.*"desc":"\([^"]*\)".*/\1/')
       file=$(echo "$line" | sed 's/.*"file":"\([^"]*\)".*/\1/')
 
+      # Show only basename for readability
+      bname=$(basename "$file")
+
       echo "### ${rule} — ${desc}"
       echo ""
-      echo "**File:** \`${file}\`"
+      echo "**File:** \`${bname}\`"
       echo ""
 
       # Extract matches array if present
       if echo "$line" | grep -q '"matches"'; then
         echo "**Matches:**"
         echo "\`\`\`"
-        # Extract content between "matches":[ and ]}
-        # Then split on "," boundaries and clean up quotes
         echo "$line" | sed 's/.*"matches":\[//; s/\]}.*//' | \
           sed 's/","/\
 /g' | sed 's/^"//; s/"$//' | sed 's/\\"/"/g'
@@ -266,65 +302,54 @@ mkdir -p "$REPORT_DIR"
     done
   fi
 
-  # Detection Rate
-  if [ -n "$EXPECTED" ] && [ -f "$EXPECTED" ] && [ "$expected_count" -gt 0 ]; then
-    echo "## Detection Rate"
-    echo ""
-    echo "| Metric | Value |"
-    echo "|--------|-------|"
-    echo "| Expected | ${expected_count} |"
-    echo "| Detected | ${detected_count} |"
-    echo "| Missed | ${missed_count} |"
-    echo "| Rate | ${rate}% |"
-    echo ""
-
-    if [ -s "${TMP_DETECTION}.missed" ]; then
-      echo "### Missed Violations"
-      echo ""
-      while IFS= read -r item; do
-        echo "- \`${item}\`"
-      done < "${TMP_DETECTION}.missed"
-      echo ""
-    fi
-  fi
-
   # Improvement Actions
   echo "## Improvement Actions"
   echo ""
 
-  has_normal_failures=false
-  if [ "$fail_count_total" -gt 0 ]; then
-    normal_lines=$(grep '"result":"FAIL"' "$TMPFILE" | grep -v 'adversarial' || true)
-    if [ -n "$normal_lines" ]; then
-      has_normal_failures=true
+  has_a_failures=false
+  if [ -n "$fail_lines" ]; then
+    a_failures=$(echo "$fail_lines" | grep 'with_rules' || true)
+    if [ -n "$a_failures" ]; then
+      has_a_failures=true
       echo "### Rule Document Improvements"
       echo ""
-      echo "Normal sample files with failures indicate rules that need clearer documentation:"
+      echo "with_rules arm failures indicate rules that need clearer documentation:"
       echo ""
-      echo "$normal_lines" | while IFS= read -r line; do
+      echo "$a_failures" | while IFS= read -r line; do
         rule=$(echo "$line" | sed 's/.*"rule":"\([^"]*\)".*/\1/')
         desc=$(echo "$line" | sed 's/.*"desc":"\([^"]*\)".*/\1/')
         file=$(echo "$line" | sed 's/.*"file":"\([^"]*\)".*/\1/')
-        echo "- **${rule}** (${desc}) in \`${file}\`"
+        bname=$(basename "$file")
+        echo "- **${rule}** (${desc}) in \`${bname}\`"
       done
       echo ""
     fi
   fi
 
-  has_missed=false
-  if [ -n "$EXPECTED" ] && [ -f "$EXPECTED" ] && [ -s "${TMP_DETECTION}.missed" 2>/dev/null ]; then
-    has_missed=true
-    echo "### Check Tool Improvements"
+  has_no_diff=false
+  if [ -s "$TMP_AB" ]; then
+    while IFS='	' read -r page pa fa sa pb fb sb delta; do
+      if [ "$delta" -lt 5 ]; then
+        has_no_diff=true
+        break
+      fi
+    done < "$TMP_AB"
+  fi
+
+  if [ "$has_no_diff" = true ]; then
+    echo "### Low-Impact Rules"
     echo ""
-    echo "Expected violations that were not detected indicate gaps in check-rules.sh:"
+    echo "Pages where rules showed minimal improvement:"
     echo ""
-    while IFS= read -r item; do
-      echo "- \`${item}\`"
-    done < "${TMP_DETECTION}.missed"
+    while IFS='	' read -r page pa fa sa pb fb sb delta; do
+      if [ "$delta" -lt 5 ]; then
+        echo "- **${page}**: delta=${delta}% — rules may need strengthening or prompt is too simple"
+      fi
+    done < "$TMP_AB"
     echo ""
   fi
 
-  if [ "$has_normal_failures" = false ] && [ "$has_missed" = false ]; then
+  if [ "$has_a_failures" = false ] && [ "$has_no_diff" = false ]; then
     echo "No improvement actions needed."
     echo ""
   fi
@@ -339,36 +364,32 @@ if [ -n "$OUTPUT_DIR" ]; then
   SNAP_DATE=$(echo "$SNAP_ID" | sed 's/-run[0-9]*$//')
   SNAP_RUN=$(echo "$SNAP_ID" | grep -oE '[0-9]+$' || echo "1")
 
-  # Build scores JSON from summary
+  # Build scores JSON from A/B data
   SCORES_JSON="{"
   first=true
-  while IFS='	' read -r fname pass fail score; do
-    page=$(echo "$fname" | sed 's/\.tsx$//')
+  while IFS='	' read -r page pa fa sa pb fb sb delta; do
     if [ "$first" = true ]; then first=false; else SCORES_JSON="${SCORES_JSON},"; fi
-    SCORES_JSON="${SCORES_JSON}\"${page}\":{\"pass\":${pass},\"fail\":${fail},\"score\":${score}}"
-  done < "$TMP_SUMMARY"
+    SCORES_JSON="${SCORES_JSON}\"${page}\":{\"with_rules\":{\"pass\":${pa},\"fail\":${fa},\"score\":${sa}},\"without_rules\":{\"pass\":${pb},\"fail\":${fb},\"score\":${sb}},\"delta\":${delta}}"
+  done < "$TMP_AB"
   SCORES_JSON="${SCORES_JSON}}"
 
-  # Build prompts array
+  # Build prompts array (deduplicated page names)
   PROMPTS_JSON="["
   first=true
-  while IFS='	' read -r fname pass fail score; do
-    page=$(echo "$fname" | sed 's/\.tsx$//')
+  while IFS='	' read -r page rest; do
     if [ "$first" = true ]; then first=false; else PROMPTS_JSON="${PROMPTS_JSON},"; fi
     PROMPTS_JSON="${PROMPTS_JSON}\"${page}\""
-  done < "$TMP_SUMMARY"
+  done < "$TMP_AB"
   PROMPTS_JSON="${PROMPTS_JSON}]"
-
-  DETECTION_RATE_VAL="${rate:-0}"
 
   cat > "${OUTPUT_DIR}/meta.json" << METAEOF
 {
   "id": "${SNAP_ID}",
   "date": "${SNAP_DATE}",
   "run": ${SNAP_RUN},
+  "mode": "ab",
   "prompts": ${PROMPTS_JSON},
   "scores": ${SCORES_JSON},
-  "detectionRate": ${DETECTION_RATE_VAL},
   "buildPass": ${BUILD_PASS}
 }
 METAEOF

@@ -1,191 +1,140 @@
-# Sample Page Evaluation Checklist
+# Sample Page Evaluation Checklist (2-Tier Model)
 
-Run `bash scripts/check-rules.sh tests/samples/` first. This checklist covers structural and semantic checks that grep cannot automate.
+Run `bash scripts/check-rules.sh preview/src/pages/` first for automated grep checks.
+This checklist covers structural and semantic checks that grep cannot automate.
 
 **Instructions:**
 1. Open each sample file in your editor
-2. For each row: read the Expected column, check the Actual output in the file, mark Pass/Fail
-3. Critical violation = rule broken at the structural level (wrong component hierarchy, forbidden import, inline style)
-4. Minor violation = deviation that does not break structure (missing mock data, suboptimal prop value)
+2. For each row: read the Expected column, check the Actual output, mark Pass/Fail
+3. Critical violation = rule broken at the structural level
+4. Minor violation = deviation that does not break structure
 5. A sample "passes" when it has zero critical violations
 
 ---
 
-## campaign-list.tsx — List Page (PAGE-01)
+## dashboard-overview.tsx — Dashboard Overview (PAGE-04)
 
-### Component Hierarchy
+### Component Imports
 
-| Rule | Expected | Actual | Pass/Fail |
-|------|----------|--------|-----------|
-| COMP-02 | All UI imports from @/components/composed barrel only | Single import from `@/components/composed`: PageLayout, PageHeader, SearchBar, DataTable, ActionButton, StatusBadge | Pass |
-| COMP-03 | No import from @/components/ui/ | No @/components/ui/ import present | Pass |
-| PAGE-01 | Structure: PageLayout → PageHeader → SearchBar → DataTable | PageLayout wraps PageHeader, SearchBar, DataTable in order | Pass |
-| PAGE-01 | No KpiCardGroup present | KpiCardGroup not imported or used | Pass |
-| PAGE-01 | No ChartSection present | ChartSection not imported or used | Pass |
-| PAGE-01 | No TabGroup present | TabGroup not imported or used | Pass |
+| Rule | Expected | Pass/Fail |
+|------|----------|-----------|
+| 2-tier | shadcn imports from `@/components/ui/*` directly | |
+| 2-tier | Composed imports from `@/components/composed` barrel only (DataTable, KpiCard) | |
+| FORB-04 | No unnecessary Composed wrappers (no ActionButton, StatusBadge, etc.) | |
 
-### Forbidden Patterns
+### Page Structure
 
-| Rule | Expected | Actual | Pass/Fail |
-|------|----------|--------|-----------|
-| FORB-01 | No style={{}} on any element | No style={{}} attributes found | Pass |
-| FORB-02 | No hex/rgb/oklch literals | No hex/rgb/oklch literals found | Pass |
-| FORB-02 | No bg-zinc/bg-gray/bg-slate Tailwind primitives | No Tailwind color primitives found | Pass |
-| FORB-03 | No <div className="flex..."> layout wrappers | No raw div layout wrappers found | Pass |
-| FORB-04 | No import from @/components/ui/ | Not present | Pass |
-| FORB-05 | No bare <Input> outside <FormField> | No Input elements used (list page, no form) | Pass |
+| Rule | Expected | Pass/Fail |
+|------|----------|-----------|
+| PAGE-04 | Root: `div.flex.flex-col.gap-4.p-4` | |
+| PAGE-04 | Page header: NOT a Card — div with h1 + p + Button | |
+| PAGE-04 | Section order: KPI → Chart → Table | |
+| PAGE-04 | KPI grid: `grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4` | |
+| PAGE-04 | Chart grid: `grid grid-cols-1 gap-4 lg:grid-cols-2` | |
 
-### Naming
+### Card Structure
 
-| Rule | Expected | Actual | Pass/Fail |
-|------|----------|--------|-----------|
-| NAME-01 | File named campaign-list.tsx (kebab-case) | campaign-list.tsx | Pass |
-| NAME-02 | Import from @/components/composed (barrel, not direct file) | `from "@/components/composed"` (barrel) | Pass |
-| NAME-03 | No CSS variable definitions in TSX file | No `--var:` definitions in file | Pass |
+| Rule | Expected | Pass/Fail |
+|------|----------|-----------|
+| CARD | Every section (KPI group, chart, table) wrapped in Card | |
+| CARD | No Card double-wrapping (Card inside Card) | |
+| CARD | Every Card has CardHeader with at least CardTitle | |
+| CARD-02 | Chart inside Card > CardContent > ChartContainer | |
+| CARD-02 | ChartContainer has `min-h-[VALUE]` or `aspect-*` | |
+| CARD-02 | `accessibilityLayer` on chart root | |
 
-**Score: 15/15 Pass | Critical violations: 0**
+### Chart Rules
 
----
+| Rule | Expected | Pass/Fail |
+|------|----------|-----------|
+| FORB-01 | No `<Tooltip>` or `contentStyle={{}}` — use `<ChartTooltip content={<ChartTooltipContent />} />` | |
+| FORB-01 | No `stroke` prop on CartesianGrid/XAxis/YAxis | |
+| FORB-02 | Chart colors defined in chartConfig, referenced as `var(--color-KEY)` | |
+| TOKEN | No hardcoded hex/rgb/oklch in chart props | |
 
-## campaign-detail.tsx — Detail Page (PAGE-02)
+### Formatting
 
-### Component Hierarchy
-
-| Rule | Expected | Actual | Pass/Fail |
-|------|----------|--------|-----------|
-| COMP-02 | All UI imports from @/components/composed barrel only | All UI imports from `@/components/composed`; recharts imports are chart library (not UI components) | Pass |
-| PAGE-02 | Structure: PageLayout → PageHeader(backHref, action=StatusBadge) → KpiCardGroup → ChartSection → DataTable | PageLayout → PageHeader(backHref="/campaigns", action={StatusBadge}) → KpiCardGroup(cols=4) → ChartSection(cols=1) → DataTable | Pass |
-| PAGE-02 | No TabGroup (flat structure required) | TabGroup not imported or used | Pass |
-| PAGE-02 | PageHeader has backHref prop | `backHref="/campaigns"` present | Pass |
-| PAGE-02 | PageHeader has action=StatusBadge | `action={<StatusBadge status="active" />}` present | Pass |
-| PAGE-02 | ChartSection has cols={1} | `<ChartSection cols={1} ...>` | Pass |
-| PAGE-02 | KpiCardGroup present with cols prop | `<KpiCardGroup cols={4} items={kpiItems} />` | Pass |
+| Rule | Expected | Pass/Fail |
+|------|----------|-----------|
+| FMT | KPI values use `formatCurrencyCompact`/`formatCompact`/`formatDelta` from `@/lib/format` | |
+| FMT-03 | All format calls have explicit locale parameter | |
+| FMT-01 | No `toLocaleString()` or `Intl.NumberFormat` | |
 
 ### Forbidden Patterns
 
-| Rule | Expected | Actual | Pass/Fail |
-|------|----------|--------|-----------|
-| FORB-01 | No style={{}} on any element | Check for `style={{`, `contentStyle={{`, and `stroke=` on CartesianGrid/XAxis/YAxis. Use `ChartTooltip` + `ChartTooltipContent` for tooltips. ChartContainer handles axis styling. | — |
-| FORB-02 | No hex/rgb/oklch literals | No hex/rgb/oklch literals; colors defined in chartConfig, referenced as var(--color-KEY) | — |
-| FORB-03 | No <div className="flex..."> layout wrappers | No raw div layout wrappers found | — |
-| FORB-04 | No import from @/components/ui/ | Not present | — |
-| FORB-05 | No bare <Input> outside <FormField> | No Input elements used (detail page, no form) | — |
-
-### Naming
-
-| Rule | Expected | Actual | Pass/Fail |
-|------|----------|--------|-----------|
-| NAME-01 | File named campaign-detail.tsx (kebab-case) | campaign-detail.tsx | — |
-| NAME-02 | Import from @/components/composed (barrel) | `from "@/components/composed"` (barrel) | — |
-
-**Score: —/14 | Evaluate against generated samples**
+| Rule | Expected | Pass/Fail |
+|------|----------|-----------|
+| FORB-01 | No `style={{}}` on any element | |
+| FORB-02 | No hex/rgb/oklch literals, no Tailwind color primitives | |
+| FORB-03 | No raw div with border/bg as Card substitute | |
+| TOKEN-01 | No `rounded-md`, `rounded-lg` etc. (use `rounded-[--radius]`) | |
 
 ---
 
-## campaign-form.tsx — Form / Settings Page (PAGE-03)
+## campaign-form.tsx — Form Page (PAGE-03)
 
-### Component Hierarchy
+### Component Imports
 
-| Rule | Expected | Actual | Pass/Fail |
-|------|----------|--------|-----------|
-| COMP-02 | All UI imports from @/components/composed barrel only | Single import from `@/components/composed`: PageLayout, PageHeader, FormFieldSet, FormRow, FormField, FormActions, ActionButton, Input, Select, Textarea, DateRangePicker | Pass |
-| PAGE-03 | Structure: PageLayout → PageHeader(backHref) → form → FormFieldSet(s) → FormActions | PageLayout → PageHeader(backHref="/campaigns") → form → FormFieldSet("Basic Info") → FormFieldSet("Budget & Schedule") → FormActions | Pass |
-| PAGE-03 | PageHeader has backHref prop | `backHref="/campaigns"` present | Pass |
-| FORM-01 | FormActions is a sibling of FormFieldSet (not nested inside it) | FormActions appears after both FormFieldSets, outside them, as sibling | Pass |
-| FORM-02 | Cancel (variant="outline") appears BEFORE Save (type="submit") in FormActions | `<ActionButton variant="outline">Cancel</ActionButton>` then `<ActionButton type="submit">Save</ActionButton>` | Pass |
-| FORM-01 | FormField wraps every Input/Select/Textarea/Checkbox | All Input, Select, Textarea, DateRangePicker elements are wrapped in FormField | Pass |
-| FORM-01 | At least one FormFieldSet present | Two FormFieldSets present: "Basic Info" and "Budget & Schedule" | Pass |
+| Rule | Expected | Pass/Fail |
+|------|----------|-----------|
+| 2-tier | shadcn imports from `@/components/ui/*` directly (Card, Button, Input, Select, Field, etc.) | |
+| 2-tier | No Composed imports needed (form page) | |
+
+### Page Structure
+
+| Rule | Expected | Pass/Fail |
+|------|----------|-----------|
+| PAGE-03 | Root: `div.flex.flex-col.gap-4.p-4` | |
+| PAGE-03 | Page header: NOT a Card — div with Back button + h1 | |
+| PAGE-03 | Single Card for entire form | |
+
+### Field Hierarchy
+
+| Rule | Expected | Pass/Fail |
+|------|----------|-----------|
+| FIELD | Card > CardContent > form > FieldGroup > FieldSet(s) | |
+| FIELD | Every Input/Select/Textarea inside Field > FieldLabel | |
+| FIELD | Multi-section: FieldSet + FieldSeparator (NOT multiple Cards) | |
+| FIELD | FieldLegend in each FieldSet | |
+| FIELD | 2-column fields: `grid grid-cols-1 gap-4 sm:grid-cols-2` inside FieldSet | |
+
+### Form Actions
+
+| Rule | Expected | Pass/Fail |
+|------|----------|-----------|
+| FIELD | Form has `id` attribute | |
+| FIELD | Submit button in CardFooter with `form="form-id"` | |
+| FIELD | CardFooter has `className="border-t"` | |
+| FIELD | Cancel (variant="outline") + Save (type="submit") — variants distinct | |
+| FIELD | Submit button NOT inside CardContent | |
+
+### react-hook-form (if applicable)
+
+| Rule | Expected | Pass/Fail |
+|------|----------|-----------|
+| FIELD-04 | Controller renders Field components | |
+| FIELD-04 | `data-invalid` on Field, `aria-invalid` on Input | |
+| FIELD-04 | FieldError with error state | |
 
 ### Forbidden Patterns
 
-| Rule | Expected | Actual | Pass/Fail |
-|------|----------|--------|-----------|
-| FORB-01 | No style={{}} on any element | No style={{}} attributes found | Pass |
-| FORB-02 | No hex/rgb/oklch literals | No hex/rgb/oklch literals found | Pass |
-| FORB-03 | No <div className="flex..."> layout wrappers | No raw div layout wrappers; FormRow used for grid layout | Pass |
-| FORB-04 | No import from @/components/ui/ | Not present | Pass |
-| FORB-05 | No bare <Input> outside <FormField> | All Input elements inside FormField | Pass |
-| FORM-03 | No bare <input> (lowercase) element | No bare <input> found | Pass |
-| FORM-03 | No bare <label> element | No bare <label> found | Pass |
-
-### Naming
-
-| Rule | Expected | Actual | Pass/Fail |
-|------|----------|--------|-----------|
-| NAME-01 | File named campaign-form.tsx (kebab-case) | campaign-form.tsx | Pass |
-| NAME-02 | Import from @/components/composed (barrel) | `from "@/components/composed"` (barrel) | Pass |
-
-**Score: 16/16 Pass | Critical violations: 0**
+| Rule | Expected | Pass/Fail |
+|------|----------|-----------|
+| FORB-01 | No `style={{}}` on any element | |
+| FORB-02 | No hex/rgb/oklch literals, no Tailwind color primitives | |
+| FORB-05 | No bare `<input>`, `<select>`, `<button>` HTML tags | |
+| FORB-05 | No bare Input/Select outside Field in form context | |
+| FIELD | No bare `<label>` tags — use FieldLabel | |
+| TOKEN-01 | No `rounded-md`, `rounded-lg` etc. (use `rounded-[--radius]`) | |
 
 ---
 
-## dashboard-overview.tsx — Dashboard Overview Page (PAGE-04)
-
-### Component Hierarchy
-
-| Rule | Expected | Actual | Pass/Fail |
-|------|----------|--------|-----------|
-| COMP-02 | All UI imports from @/components/composed barrel only | All UI imports from `@/components/composed`; recharts imports are chart library (not UI components) | Pass |
-| PAGE-04 | Structure: PageLayout → PageHeader → KpiCardGroup → ChartSection(cols=2) → DataTable | PageLayout → PageHeader → KpiCardGroup(cols=4) → ChartSection(cols=2) → DataTable | Pass |
-| PAGE-04 | KpiCardGroup present (not omitted) | `<KpiCardGroup cols={4} items={kpiItems} />` present | Pass |
-| PAGE-04 | ChartSection has cols={2} — CRITICAL requirement | `<ChartSection cols={2} charts={[...]} />` | Pass |
-| PAGE-04 | DataTable appears AFTER ChartSection (not before) | DataTable follows ChartSection in JSX order | Pass |
-| PAGE-04 | ChartSection has at least 2 chart entries | Two charts: DailySpendChart and ChannelSplitChart | Pass |
-
-### Forbidden Patterns
-
-| Rule | Expected | Actual | Pass/Fail |
-|------|----------|--------|-----------|
-| FORB-01 | No style={{}} on any element | Check for `style={{`, `contentStyle={{`, and `stroke=` on CartesianGrid/XAxis/YAxis. Use `ChartTooltip` + `ChartTooltipContent`. ChartContainer handles axis styling. | — |
-| FORB-02 | No hex/rgb/oklch literals | No hex/rgb/oklch literals; colors defined in chartConfig, referenced as var(--color-KEY) | — |
-| FORB-03 | No <div className="flex..."> layout wrappers | No raw div layout wrappers found | — |
-| FORB-04 | No import from @/components/ui/ | Not present | — |
-| FORB-05 | No bare <Input> outside <FormField> | No Input elements used (dashboard page, no form) | — |
-
-### Naming
-
-| Rule | Expected | Actual | Pass/Fail |
-|------|----------|--------|-----------|
-| NAME-01 | File named dashboard-overview.tsx (kebab-case) | dashboard-overview.tsx | Pass |
-| NAME-02 | Import from @/components/composed (barrel) | `from "@/components/composed"` (barrel) | Pass |
-
-**Score: 14/14 Pass | Critical violations: 0**
-
----
-
-## Summary
+## Summary Template
 
 | Page | Score | Critical Violations | Overall |
 |------|-------|---------------------|---------|
-| campaign-list.tsx | 15/15 | 0 | Pass |
-| campaign-detail.tsx | 14/14 | 0 | Pass |
-| campaign-form.tsx | 16/16 | 0 | Pass |
-| dashboard-overview.tsx | 14/14 | 0 | Pass |
+| dashboard-overview.tsx | /__ | __ | |
+| campaign-form.tsx | /__ | __ | |
 
-**Total: 59/59 | System verdict: Pass (0 critical violations across all pages)**
-
-### Violations Found
-
-None. All 4 samples passed every check.
-
-### Notes on Chart Component Rules
-
-Per shadcn official documentation, charts MUST use shadcn's chart components:
-- `ChartTooltip` + `ChartTooltipContent` for tooltips (NOT raw Recharts `<Tooltip>` with `contentStyle`)
-- `ChartLegend` + `ChartLegendContent` for legends
-- `ChartContainer` with `min-h-[VALUE]` for responsive sizing
-- `accessibilityLayer` on chart root for keyboard/screen reader support
-
-Recharts `contentStyle={{...}}` is a FORB-01 violation — even though it is a library prop, shadcn provides `ChartTooltip` as the replacement. Similarly, do NOT pass `stroke` props to `CartesianGrid`, `XAxis`, `YAxis` — `ChartContainer` handles axis/grid theming internally.
-
-Chart colors should be defined in `chartConfig` and referenced as `var(--color-KEY)`, not directly as `var(--chart-N)` on elements.
-
-### Next Step
-
-Evaluate generated samples against updated rules.
-
----
-
-**Verification date:** 2026-03-26
-**Final verdict:** PASS — zero critical violations
-**Automated check exit code:** 0
+**Verification date:** ____
+**Final verdict:** ____
