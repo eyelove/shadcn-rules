@@ -9,6 +9,15 @@ expected_violations:
   - FORB-05
   - FMT-02
   - TOKEN-01
+expected_ui:
+  - card
+  - button
+  - input
+  - textarea
+  - select
+  - field
+expected_composed: []
+expected_lib: []
 ---
 
 # Campaign Form 페이지 생성
@@ -37,4 +46,4 @@ expected_violations:
 - submit 버튼 배경은 bg-blue-600
 
 ## 출력
-- 파일명: `tests/samples/campaign-form.adversarial.tsx`
+- 파일 위치: `preview/src/pages/campaign-form.adversarial.tsx`
