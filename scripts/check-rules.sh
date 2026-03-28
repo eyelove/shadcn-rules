@@ -5,20 +5,30 @@
 
 FORMAT="text"
 ARGS=()
+PROMPT_FILE=""
+PREVIEW_DIR=""
+
 for arg in "$@"; do
   case "$arg" in
     --format)
       FORMAT="__next__"
       ;;
-    jsonl)
+    --prompt)
+      PROMPT_FILE="__next__"
+      ;;
+    --preview-dir)
+      PREVIEW_DIR="__next__"
+      ;;
+    *)
       if [ "$FORMAT" = "__next__" ]; then
-        FORMAT="jsonl"
+        FORMAT="$arg"
+      elif [ "$PROMPT_FILE" = "__next__" ]; then
+        PROMPT_FILE="$arg"
+      elif [ "$PREVIEW_DIR" = "__next__" ]; then
+        PREVIEW_DIR="$arg"
       else
         ARGS+=("$arg")
       fi
-      ;;
-    *)
-      ARGS+=("$arg")
       ;;
   esac
 done
@@ -81,6 +91,53 @@ check_absent() {
       echo -e "${GREEN}PASS${NC} [${rule_id}] $desc"
     fi
     PASSED=$((PASSED + 1))
+  fi
+}
+
+check_file_exists() {
+  local rule_id="$1"
+  local desc="$2"
+  local filepath="$3"
+  CHECKS=$((CHECKS + 1))
+
+  if [ -f "$filepath" ]; then
+    if [ "$FORMAT" = "jsonl" ]; then
+      echo "{\"rule\":\"${rule_id}\",\"desc\":\"${desc}\",\"file\":\"${filepath}\",\"result\":\"PASS\"}"
+    else
+      echo -e "${GREEN}PASS${NC} [${rule_id}] $desc"
+    fi
+    PASSED=$((PASSED + 1))
+  else
+    if [ "$FORMAT" = "jsonl" ]; then
+      echo "{\"rule\":\"${rule_id}\",\"desc\":\"${desc}\",\"file\":\"${filepath}\",\"result\":\"FAIL\"}"
+    else
+      echo -e "${RED}FAIL${NC} [${rule_id}] $desc (file not found: ${filepath})"
+    fi
+    VIOLATIONS=$((VIOLATIONS + 1))
+  fi
+}
+
+check_export_exists() {
+  local rule_id="$1"
+  local desc="$2"
+  local pattern="$3"
+  local filepath="$4"
+  CHECKS=$((CHECKS + 1))
+
+  if [ -f "$filepath" ] && grep -q "$pattern" "$filepath" 2>/dev/null; then
+    if [ "$FORMAT" = "jsonl" ]; then
+      echo "{\"rule\":\"${rule_id}\",\"desc\":\"${desc}\",\"file\":\"${filepath}\",\"result\":\"PASS\"}"
+    else
+      echo -e "${GREEN}PASS${NC} [${rule_id}] $desc"
+    fi
+    PASSED=$((PASSED + 1))
+  else
+    if [ "$FORMAT" = "jsonl" ]; then
+      echo "{\"rule\":\"${rule_id}\",\"desc\":\"${desc}\",\"file\":\"${filepath}\",\"result\":\"FAIL\"}"
+    else
+      echo -e "${RED}FAIL${NC} [${rule_id}] $desc"
+    fi
+    VIOLATIONS=$((VIOLATIONS + 1))
   fi
 }
 
@@ -239,6 +296,132 @@ check "PAGE-04" "No raw <span> as flex layout container" '<span className="flex'
 # console.log: acceptable in sample/test files as placeholder for TODO actions.
 # In production code, use a lint rule (eslint no-console) instead.
 # check "No console.log in page files" 'console\.log(' "$TARGET"
+
+# --- ENVIRONMENT CHECKS ---
+# Active only when --prompt and --preview-dir are provided.
+
+if [ -n "$PROMPT_FILE" ] && [ -n "$PREVIEW_DIR" ]; then
+  if [ "$FORMAT" != "jsonl" ]; then
+    echo ""
+    echo "--- ENVIRONMENT CHECKS ---"
+  fi
+
+  # ENV-01: expected_ui components are installed
+  in_section=0
+  while IFS= read -r line; do
+    if echo "$line" | grep -q "^expected_ui:"; then
+      in_section=1
+      continue
+    fi
+    if [ "$in_section" = "1" ]; then
+      if echo "$line" | grep -q "^  - "; then
+        comp=$(echo "$line" | sed 's/^  - //')
+        check_file_exists "ENV-01" "shadcn component installed: ${comp}" "${PREVIEW_DIR}/src/components/ui/${comp}.tsx"
+      else
+        in_section=0
+      fi
+    fi
+  done < "$PROMPT_FILE"
+
+  # ENV-02: expected_composed components exist + barrel export
+  in_section=0
+  has_composed=0
+  while IFS= read -r line; do
+    if echo "$line" | grep -q "^expected_composed:"; then
+      in_section=1
+      continue
+    fi
+    if [ "$in_section" = "1" ]; then
+      if echo "$line" | grep -q "^  - "; then
+        comp=$(echo "$line" | sed 's/^  - //')
+        has_composed=1
+        check_file_exists "ENV-02" "Composed component exists: ${comp}" "${PREVIEW_DIR}/src/components/composed/${comp}.tsx"
+        check_export_exists "ENV-02" "Composed barrel exports: ${comp}" "export.*${comp}" "${PREVIEW_DIR}/src/components/composed/index.ts"
+      elif echo "$line" | grep -q "^\[\]"; then
+        in_section=0
+      else
+        in_section=0
+      fi
+    fi
+  done < "$PROMPT_FILE"
+
+  if [ "$has_composed" = "1" ]; then
+    check_file_exists "ENV-02" "Composed barrel index.ts exists" "${PREVIEW_DIR}/src/components/composed/index.ts"
+  fi
+
+  # ENV-03: expected_lib functions exist
+  in_section=0
+  has_lib=0
+  while IFS= read -r line; do
+    if echo "$line" | grep -q "^expected_lib:"; then
+      in_section=1
+      continue
+    fi
+    if [ "$in_section" = "1" ]; then
+      if echo "$line" | grep -q "^  - "; then
+        func=$(echo "$line" | sed 's/^  - //')
+        has_lib=1
+        check_export_exists "ENV-03" "Format function exists: ${func}" "\(function ${func}\|export.*${func}\)" "${PREVIEW_DIR}/src/lib/format.ts"
+      elif echo "$line" | grep -q "^\[\]"; then
+        in_section=0
+      else
+        in_section=0
+      fi
+    fi
+  done < "$PROMPT_FILE"
+
+  if [ "$has_lib" = "1" ]; then
+    check_file_exists "ENV-03" "@/lib/format.ts exists" "${PREVIEW_DIR}/src/lib/format.ts"
+  fi
+
+  # ENV-04: shadcn originals not modified (checksum comparison)
+  if [ -f "${PREVIEW_DIR}/.ui-checksums" ]; then
+    CURRENT_SUM=$(find "${PREVIEW_DIR}/src/components/ui" -name "*.tsx" -exec shasum {} \; 2>/dev/null | sort | shasum | awk '{print $1}')
+    SAVED_SUM=$(cat "${PREVIEW_DIR}/.ui-checksums")
+    CHECKS=$((CHECKS + 1))
+    if [ "$CURRENT_SUM" = "$SAVED_SUM" ]; then
+      if [ "$FORMAT" = "jsonl" ]; then
+        echo "{\"rule\":\"ENV-04\",\"desc\":\"shadcn originals not modified\",\"file\":\"${PREVIEW_DIR}/src/components/ui\",\"result\":\"PASS\"}"
+      else
+        echo -e "${GREEN}PASS${NC} [ENV-04] shadcn originals not modified"
+      fi
+      PASSED=$((PASSED + 1))
+    else
+      if [ "$FORMAT" = "jsonl" ]; then
+        echo "{\"rule\":\"ENV-04\",\"desc\":\"shadcn originals not modified\",\"file\":\"${PREVIEW_DIR}/src/components/ui\",\"result\":\"FAIL\"}"
+      else
+        echo -e "${RED}FAIL${NC} [ENV-04] shadcn originals were modified"
+      fi
+      VIOLATIONS=$((VIOLATIONS + 1))
+    fi
+  fi
+
+  # ENV-05: no extra Composed components beyond allowed list
+  if [ -d "${PREVIEW_DIR}/src/components/composed" ]; then
+    EXTRA=$(find "${PREVIEW_DIR}/src/components/composed" -maxdepth 1 \( -name "*.tsx" -o -name "*.ts" \) | while read -r f; do
+      bname=$(basename "$f")
+      if [ "$bname" != "DataTable.tsx" ] && [ "$bname" != "KpiCard.tsx" ] && [ "$bname" != "SearchBar.tsx" ] && [ "$bname" != "index.ts" ]; then
+        echo "$bname"
+      fi
+    done)
+    CHECKS=$((CHECKS + 1))
+    if [ -z "$EXTRA" ]; then
+      if [ "$FORMAT" = "jsonl" ]; then
+        echo "{\"rule\":\"ENV-05\",\"desc\":\"No extra Composed components\",\"file\":\"${PREVIEW_DIR}/src/components/composed\",\"result\":\"PASS\"}"
+      else
+        echo -e "${GREEN}PASS${NC} [ENV-05] No extra Composed components"
+      fi
+      PASSED=$((PASSED + 1))
+    else
+      if [ "$FORMAT" = "jsonl" ]; then
+        echo "{\"rule\":\"ENV-05\",\"desc\":\"No extra Composed components\",\"file\":\"${PREVIEW_DIR}/src/components/composed\",\"result\":\"FAIL\",\"matches\":[\"${EXTRA}\"]}"
+      else
+        echo -e "${RED}FAIL${NC} [ENV-05] Extra Composed components found: ${EXTRA}"
+      fi
+      VIOLATIONS=$((VIOLATIONS + 1))
+    fi
+  fi
+fi
 
 if [ "$FORMAT" != "jsonl" ]; then
   echo ""
