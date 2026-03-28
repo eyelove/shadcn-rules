@@ -94,7 +94,7 @@ Chart cards wrap a single visualization with an optional period selector in the 
 ```
 
 **Rules:**
-- Chart colors MUST use token vars: `var(--chart-1)` through `var(--chart-6)`
+- Chart colors MUST use token vars: `var(--chart-1)` through `var(--chart-5)`
 - Period selector (Select or ToggleGroup) goes in CardAction, not above the chart
 - Tooltip contentStyle is the ONLY allowed inline style — values MUST be token vars
 // WHY: Centralizing the period control in CardAction keeps the header scannable and avoids raw div toolbars.

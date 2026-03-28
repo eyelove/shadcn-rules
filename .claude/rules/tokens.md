@@ -30,7 +30,7 @@ Reference tokens as Tailwind utility classes where available, or as `var(--token
 `bg-primary` · `bg-secondary` · `bg-destructive` · `border-border` · `ring-ring`
 
 **Dashboard extensions (use `var()` syntax — no Tailwind utility class):**
-`var(--chart-1)` through `var(--chart-6)` — chart series colors
+`var(--chart-1)` through `var(--chart-5)` — chart series colors
 `var(--kpi-bg)` — KPI card background
 `var(--kpi-positive)` — positive delta (green)
 `var(--kpi-negative)` — negative delta (red)
