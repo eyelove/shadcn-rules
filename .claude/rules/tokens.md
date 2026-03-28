@@ -65,23 +65,79 @@ NEVER use inline `style={{ fontSize: "..." }}` or `style={{ fontWeight: "..." }}
 
 ## Spacing
 
-Tailwind의 4px 단위 spacing scale만 사용한다. 어디에 얼마만큼의 간격을 넣을지는 디자인 맥락에 맞게 자유롭게 판단한다.
-// WHY: 4px 단위를 지키면 시각적 리듬이 유지된다. 구체적 배치는 AI의 디자인 판단에 맡긴다.
+Tailwind의 4px 단위 spacing scale만 사용한다. `gap-4`(16px)가 기본 간격이다.
+특별한 지시가 없으면 아래 테이블의 값을 그대로 사용한다.
+// WHY: Typography와 동일한 접근 — 역할마다 고정값을 두면 AI가 판단할 필요 없이 일관된 결과를 만든다.
 
 **허용하는 단위:**
 `gap-1`(4px) · `gap-2`(8px) · `gap-3`(12px) · `gap-4`(16px) · `gap-6`(24px)
 `p-1` ~ `p-6` · `m-1` ~ `m-6` · `space-y-*` · `space-x-*`
 
-**고정값** (사용자가 직접 변경을 요청하지 않는 한 이 값을 사용):
+### 역할별 고정값
 
-| 역할 | 값 |
-|------|-----|
-| 페이지 루트 래퍼 | `div.flex.flex-col.gap-4.p-4` |
-| 페이지 헤더 | div (Card 아님), `h1.text-xl.font-semibold` + `p.text-sm.text-muted-foreground` |
+사용자가 직접 변경을 요청하지 않는 한 이 값을 사용한다.
+
+| 역할 | 클래스 | px |
+|------|--------|-----|
+| 페이지 루트 래퍼 | `flex flex-col gap-4 p-4` | gap 16, padding 16 |
+| 페이지 헤더 | div (Card 아님) | — |
+| 섹션 간 간격 (KPI↔Chart↔Table) | 루트의 `gap-4`가 처리 | 16 |
+| Card grid (KPI, Chart) | `gap-4` | 16 |
+| CardContent 내부 수직 그룹 | `space-y-4` | 16 |
+| 필터 바 ↔ DataTable 간격 | `pb-4` (필터 바에 적용) | 16 |
+| FieldGroup 내 Field 간격 | FieldGroup 기본 gap | — |
+| FieldSet 내 grid (2-col) | `gap-4` | 16 |
+| 인라인 요소 간 수평 간격 | `gap-2` | 8 |
+| 버튼 그룹 (CardFooter 등) | `gap-2` | 8 |
+
+// WHY: 대부분의 수직 간격은 `gap-4`(16px), 인라인 요소 간격은 `gap-2`(8px).
+// 두 값만 기억하면 된다. 예외적 간격이 필요하면 사용자가 지시한다.
+
+```tsx
+// CORRECT — 페이지 루트 래퍼 (gap-4 p-4)
+<div className="flex flex-col gap-4 p-4">
+  {/* 페이지 헤더 */}
+  <div className="flex items-center justify-between">...</div>
+  {/* KPI grid — gap-4 */}
+  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">...</div>
+  {/* Chart grid — gap-4 */}
+  <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">...</div>
+  {/* Table Card */}
+  <Card>...</Card>
+</div>
+
+// CORRECT — CardContent 내부 수직 그룹 (space-y-4)
+<CardContent className="space-y-4">
+  <div>...group A...</div>
+  <Separator />
+  <div>...group B...</div>
+</CardContent>
+
+// CORRECT — 필터 바 + DataTable (pb-4)
+<CardContent>
+  <div className="flex items-center gap-2 pb-4">
+    <Input placeholder="Filter..." />
+    <Select>...</Select>
+  </div>
+  <DataTable columns={columns} data={rows} />
+</CardContent>
+
+// CORRECT — 인라인 요소 간 간격 (gap-2)
+<div className="flex items-center gap-2">
+  <Badge variant="outline">Active</Badge>
+  <span className="text-sm text-muted-foreground">3 campaigns</span>
+</div>
+
+// FORBIDDEN — AI가 임의로 다른 간격을 선택
+<div className="flex flex-col gap-6 p-6">     // gap-6, p-6 (지시 없이 변경)
+<div className="grid grid-cols-1 gap-6 ...">   // grid에 gap-6 (기본은 gap-4)
+<div className="flex items-center gap-4">      // 인라인 요소에 gap-4 (기본은 gap-2)
+```
 
 **금지:**
 - `style={{ padding/margin/gap: "..." }}` — inline spacing
 - Tailwind scale 밖의 임의 값 (`gap-[13px]`, `p-[7px]`)
+- 기본값과 다른 간격을 사용자 지시 없이 선택하는 것
 
 ## Forbidden Patterns
 
