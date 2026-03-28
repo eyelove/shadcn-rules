@@ -1,0 +1,10 @@
+/* Dashboard extension tokens — injected by reset-preview.sh */
+/* Note: --chart-1~5 are provided by shadcn init (--preset nova). No need to duplicate here. */
+
+/* KPI tokens */
+--kpi-bg: var(--color-card);
+--kpi-positive: oklch(0.627 0.194 149.214);
+--kpi-negative: oklch(0.577 0.245 27.325);
+
+/* Table tokens */
+--table-row-hover: var(--color-accent);

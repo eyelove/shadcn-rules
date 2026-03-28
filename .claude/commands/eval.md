@@ -23,7 +23,7 @@ bash scripts/reset-preview.sh
 이 스크립트가:
 - AI 생성물 삭제 (components/composed, lib, hooks, pages)
 - `npx shadcn init` 실행 (CSS 토큰 + components.json + utils 자동 생성)
-- 프로젝트 커스텀 토큰 주입 (chart 팔레트, kpi-*, table-row-hover)
+- 프로젝트 커스텀 토큰 주입 (kpi-*, table-row-hover — chart 토큰은 shadcn이 기본 제공)
 - eval에 필요한 모든 shadcn 컴포넌트 설치 (card, badge, input, textarea, select, field, chart, separator)
 - shadcn 원본 checksum 저장 (ENV-04용)
 
