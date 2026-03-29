@@ -2,9 +2,19 @@
 # Reset preview to clean state for eval.
 # If preview/ doesn't exist, scaffolds from scratch.
 # If it exists, removes only AI-generated files (pages, composed, lib) and reapplies templates.
-# Usage: bash scripts/reset-preview.sh
+# Usage:
+#   bash scripts/reset-preview.sh            # default: clean AI-generated files only
+#   bash scripts/reset-preview.sh --fresh    # delete preview/ entirely and scaffold from scratch
 
 set -euo pipefail
+
+FRESH=false
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --fresh) FRESH=true; shift ;;
+    *) shift ;;
+  esac
+done
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="${SCRIPT_DIR}/.."
@@ -12,6 +22,21 @@ PREVIEW_DIR="${ROOT_DIR}/preview"
 TEMPLATES_DIR="${SCRIPT_DIR}/templates"
 
 echo "Resetting preview..."
+
+# ── Fresh mode: delete entire preview/ to force full scaffold ──
+if [ "$FRESH" = true ] && [ -d "${PREVIEW_DIR}" ]; then
+  echo "  --fresh: removing preview/ entirely..."
+  # Kill any running Vite dev server — it watches preview/ and recreates
+  # .vite/ cache after rm, causing "dest already exists" on shadcn init.
+  pkill -f "preview/node_modules.*vite" 2>/dev/null || true
+  sleep 1
+  rm -rf "${PREVIEW_DIR}"
+  if [ -d "${PREVIEW_DIR}" ]; then
+    echo "ERROR: Failed to remove preview/ — check for running processes"
+    exit 1
+  fi
+  echo "  ✓ preview/ removed"
+fi
 
 # ── Scaffold if preview doesn't exist ──
 if [ ! -f "${PREVIEW_DIR}/package.json" ]; then
@@ -31,18 +56,38 @@ if [ ! -f "${PREVIEW_DIR}/package.json" ]; then
 
   # Install shadcn components used in eval
   echo "Installing shadcn components..."
-  npx shadcn@latest add card badge input textarea select field chart separator --yes 2>&1
+  npx shadcn@latest add card badge button checkbox input textarea select field chart separator popover calendar switch radio-group combobox table tabs dropdown-menu dialog alert-dialog toggle-group --yes 2>&1
   echo "  ✓ shadcn components installed"
 
-  # Patch vite.config.ts — add optimizeDeps for snapshot imports
+  # Install runtime dependencies used by eval-generated pages and composed components.
+  # These are imported by AI-generated pages (react-hook-form, lucide-react, recharts)
+  # and by composed components (DataTable uses @tanstack/react-table).
+  # optimizeDeps.include alone is not enough — packages must actually be installed.
+  echo "Installing runtime dependencies..."
+  cd "${PREVIEW_DIR}" && pnpm add react-hook-form lucide-react recharts @tanstack/react-table 2>&1
+  echo "  ✓ runtime dependencies installed"
+
+  # Patch vite.config.ts — optimizeDeps for snapshot imports
   # App.viewer.tsx uses import.meta.glob to load snapshot pages outside preview/.
-  # Vite's dep scanner can't resolve dependencies from those external paths.
-  # Declaring them in optimizeDeps.include forces pre-bundling without path resolution.
+  # Problem: Vite's dep scanner follows those imports into tests/snapshots/ and fails
+  # because node_modules is in preview/, not in the snapshot directory.
+  # Fix: entries excludes App.viewer.tsx so Vite never follows the snapshot glob.
+  # include forces pre-bundling of runtime packages used by AI-generated pages.
   if [ -f "${PREVIEW_DIR}/vite.config.ts" ]; then
-    sed -i '' 's/plugins: \[react(), tailwindcss()\],/plugins: [react(), tailwindcss()],\
-  optimizeDeps: {\
-    include: ["react-hook-form", "lucide-react", "recharts"],\
-  },/' "${PREVIEW_DIR}/vite.config.ts"
+    python3 -c "
+import pathlib, re
+p = pathlib.Path('${PREVIEW_DIR}/vite.config.ts')
+code = p.read_text()
+patch = '''  optimizeDeps: {
+    entries: [\"src/**/*.{ts,tsx}\", \"!src/App.viewer.tsx\"],
+    include: [\"react-hook-form\", \"lucide-react\", \"recharts\", \"@tanstack/react-table\", \"react-day-picker\", \"date-fns\", \"date-fns/locale\"],
+  },'''
+code = code.replace(
+    'plugins: [react(), tailwindcss()],',
+    'plugins: [react(), tailwindcss()],\n' + patch
+)
+p.write_text(code)
+"
     echo "  ✓ vite.config.ts patched (optimizeDeps)"
   fi
 

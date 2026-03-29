@@ -5,26 +5,15 @@ paths:
   - "components/**/*.tsx"
   - "resources/js/**/*.tsx"
 ---
-
 # Component Rules
 
 ## Tier Model
-
-Two tiers. Use shadcn directly for standard UI. Use Composed only when a component meets qualification criteria.
-
 | Tier | Import Path | What Lives Here | Examples |
 |------|------------|-----------------|----------|
-| **shadcn** | `@/components/ui/*` | Official shadcn/ui primitives. Import and use directly. | Card, Button, Badge, Input, Select, Dialog, Tabs |
-| **Composed** | `@/components/composed/` | Project-specific wrappers that encode internal state, domain logic, or repeated multi-component patterns. | DataTable, SearchBar, KpiCard |
+| **shadcn** | `@/components/ui/*` | Official shadcn/ui primitives | Card, Button, Badge, Input, Select, Dialog, Tabs |
+| **Composed** | `@/components/composed/` | Internal state, domain logic, or 3+ repeated patterns | DataTable, SearchBar, KpiCard |
 
-// WHY: The old 3-tier model banned all shadcn imports, forcing every UI element through a wrapper.
-// Most wrappers added no logic — just forwarded props. Direct shadcn use eliminates that overhead.
-// Composed exists only when a component genuinely earns its abstraction.
-
-## Import Convention
-
-### shadcn — direct imports
-
+## Import Convention — shadcn direct
 ```tsx
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -40,137 +29,72 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
 import { Label } from "@/components/ui/label"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { Combobox, ComboboxInput, ComboboxContent, ComboboxList, ComboboxItem, ComboboxEmpty } from "@/components/ui/combobox"
+import { Switch } from "@/components/ui/switch"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 ```
 
-// WHY: shadcn components are well-documented, tree-shakeable, and accessible by default.
-// Wrapping them without adding logic creates indirection with no benefit.
-
-### Composed — barrel import
-
-```tsx
-import { DataTable, SearchBar, KpiCard } from "@/components/composed"
-```
-
-// WHY: Barrel import keeps Composed components discoverable. All Composed components MUST be
-// exported from `@/components/composed/index.ts`.
+Composed — barrel import: `import { DataTable, SearchBar, KpiCard } from "@/components/composed"`
+All Composed components MUST be exported from `@/components/composed/index.ts`.
 
 ## Composed Qualification
 
-A component belongs in Composed ONLY if it meets at least one of these criteria:
-
-### 1. Internal state logic
-The component manages its own state (sorting, filtering, pagination) that callers should not handle.
-
-```tsx
-// IS Composed — DataTable manages sort state, pagination, and column visibility internally
-<DataTable columns={columns} data={rows} onRowClick={handleClick} />
-
-// IS NOT Composed — a Card with static content has no internal state
-<Card><CardHeader><CardTitle>Revenue</CardTitle></CardHeader>
-  <CardContent>$42,000</CardContent></Card>
-```
-
-### 2. Domain-specific combination
-The component combines multiple primitives into a pattern that encodes domain rules.
-
-```tsx
-// IS Composed — KpiCard combines Card + delta formatting + positive/negative color logic
-<KpiCard label="Total Spend" value="$12,400" delta="+8%" deltaPositive />
-
-// IS NOT Composed — a Button with an icon is just standard shadcn usage
-<Button variant="outline"><PlusIcon className="mr-2 h-4 w-4" />New Campaign</Button>
-```
-
-### 3. Repeated pattern abstraction
-The same multi-component arrangement appears 3+ times across pages with identical structure.
-
-```tsx
-// IS Composed — SearchBar encodes filter config -> form fields -> submit pattern
-<SearchBar filters={filterConfig} onSearch={handleSearch} />
-
-// IS NOT Composed — a one-off form section used on a single page
-<div className="flex gap-4"><Input placeholder="Search..." /><Button>Go</Button></div>
-```
-
-// WHY: These criteria prevent premature abstraction. If a pattern does not manage state,
-// encode domain rules, or repeat across pages, it should stay as direct shadcn usage.
-
-## Composed Component List
+Composed ONLY if at least one: (1) manages own state callers should not handle, (2) combines primitives encoding domain rules, (3) same arrangement repeats 3+ times across pages.
 
 | Component | Role | Internal Logic |
 |-----------|------|---------------|
-| **DataTable** | Sortable, paginated, clickable data table | Sort state, pagination, column visibility, empty state, loading state |
-| **SearchBar** | Configurable filter bar with multiple input types | Filter state management, debounced search, config-driven field rendering |
-| **KpiCard** | Metric card with label, value, and delta | Delta formatting, positive/negative color selection via tokens |
+| **DataTable** | Sortable, paginated, clickable data table | Sort state, pagination, column visibility, empty/loading state |
+| **SearchBar** | Configurable filter bar | Filter state, debounced search, config-driven field rendering |
+| **KpiCard** | Metric card with label, value, delta | Delta formatting, positive/negative color via tokens |
 
-For detailed Props contracts and usage examples, see:
-- @.claude/rules/data-table.md — DataTable columns, actions, render functions
-- @.claude/rules/cards.md — KpiCard props, delta formatting, grid layout
-- @.claude/rules/fields.md — form field patterns with shadcn primitives
-
-## Cell Functions in DataTable
-
-When using `cell` in DataTable columns, you MAY use `<span>` with token-based Tailwind classes:
+### SearchBar Props Interface
 ```tsx
-// ALLOWED — token-based text styling in cell functions
-cell: (row) => <span className="font-medium text-foreground">{row.name}</span>
-cell: (row) => <Badge variant="outline">{row.status}</Badge>
-
-// FORBIDDEN — hardcoded colors or inline styles in cell functions
-cell: (row) => <span style={{ color: "red" }}>{row.status}</span>
-cell: (row) => <span className="text-red-500">{row.status}</span>
+interface SearchBarProps {
+  filters: SearchBarFilter[]
+  onSearch: (values: Record<string, unknown>) => void
+}
+type SearchBarFilter = TextFilter | SelectFilter | ComboboxFilter | DateRangeFilter
+{ type: "text", name: "search", placeholder: "캠페인 검색..." }
+{ type: "select", name: "status", placeholder: "상태", options: [{ value: "active", label: "활성" }] }
+{ type: "combobox", name: "channel", placeholder: "채널 선택", items: [{ value: "google", label: "Google Ads" }] }
+{ type: "dateRange", name: "period", placeholder: "기간 선택" }
 ```
-// WHY: DataTable cell functions need lightweight formatting. Token classes keep consistency.
-
-## Chart Library Usage
-
-Charts use shadcn's chart components from `@/components/ui/chart`:
-- `ChartContainer` — responsive wrapper (MUST have `min-h-[VALUE]` or `aspect-*`)
-- `ChartTooltip` + `ChartTooltipContent` — themed tooltip
-- `ChartLegend` + `ChartLegendContent` — themed legend
-
-Recharts primitives (`BarChart`, `LineChart`, `CartesianGrid`, `XAxis`, `YAxis`, etc.) are imported directly from `recharts`.
-Axis/Grid styling is handled by `ChartContainer` — do NOT pass `stroke` props to axis/grid components.
-Chart colors are defined in `chartConfig` and referenced as `var(--color-KEY)`.
-
+Usage (Card > CardContent, above DataTable):
 ```tsx
-// CORRECT — shadcn chart pattern (no stroke on axis/grid, chartConfig colors)
-<ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-  <BarChart accessibilityLayer data={data}>
-    <CartesianGrid vertical={false} />
-    <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} />
-    <ChartTooltip content={<ChartTooltipContent />} />
-    <ChartLegend content={<ChartLegendContent />} />
-    <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
-  </BarChart>
-</ChartContainer>
-
-// FORBIDDEN — raw Recharts Tooltip with contentStyle
-<Tooltip contentStyle={{ backgroundColor: "var(--card)" }} />
-
-// FORBIDDEN — manual stroke on axis/grid (ChartContainer handles this)
-<CartesianGrid stroke="var(--border)" />
-<XAxis stroke="var(--muted-foreground)" />
-
-// FORBIDDEN — hardcoded colors
-<CartesianGrid stroke="#e5e7eb" />
-<Bar fill="blue" />
+<SearchBar filters={[
+  { type: "text", name: "search", placeholder: "캠페인 검색..." },
+  { type: "combobox", name: "channel", placeholder: "채널 선택", items: channels },
+  { type: "dateRange", name: "period", placeholder: "기간 선택" },
+  { type: "select", name: "status", placeholder: "상태", options: statusOptions },
+]} onSearch={handleSearch} />
+<DataTable columns={columns} data={filteredRows} />
 ```
-// WHY: shadcn's ChartContainer handles axis/grid theming internally. ChartTooltipContent and
-// ChartLegendContent use token-based classes. Manual stroke props and raw Tooltip bypass this system.
+
+## Input Component Selection — SELECT-01
+| 기준 | Select | Combobox |
+|------|--------|----------|
+| 옵션 수 | ~10개 이하, 고정 목록 | 10개 이상 또는 동적/Ajax |
+| 검색 | 없음 | 타이핑 즉시 필터링 |
+| 다중 선택 | 미지원 | `multiple` prop 지원 |
+| 대시보드 사용처 | 상태 필터, 차트 기간, 카테고리 | 캠페인 선택, 광고주 검색, 매체 선택 |
+
+Native `<select>` 사용 금지 — 토큰 시스템 적용 불가.
+
+### DATE-01 — Date Picker
+대시보드에서 Calendar 인라인 금지. 항상 Popover 안에 넣는다.
+| 시나리오 | 구성 | 배치 위치 |
+|---------|------|---------|
+| 폼 날짜 입력 | `Popover` + `Calendar mode="single"` | Field |
+| 차트/리포트 기간 필터 | `Popover` + `Select`(프리셋) + `Calendar mode="range"` | CardAction |
+
+### RADIO-01 — RadioGroup vs Select vs Choice Card
+| 기준 | RadioGroup | Choice Card | Select |
+|------|-----------|-------------|--------|
+| 옵션 수 | 2~5개 | 2~5개 | ~10개 이하 |
+| 옵션 설명 | 불필요 | 제목+설명 필요 | 불필요 |
+| 대시보드 사용처 | 캠페인 목표, 입찰 전략 | 요금제, 캠페인 유형 | 상태, 지역, 기간 |
 
 ## Escape Hatch
-
-Need a new Composed component?
-1. Verify it meets at least one Composed Qualification criterion above
-2. Describe the component, its internal logic, and why direct shadcn usage is insufficient
-3. Wait for approval before creating
-4. After approval, create it in `@/components/composed/` with a typed props interface
-5. Export it from `@/components/composed/index.ts`
-6. NEVER add `className` to a Composed component's public props
-
-// WHY: Composed components are high-trust abstractions. Each one adds API surface that every
-// consumer must learn. The approval gate prevents premature or redundant abstractions.
-
-For token rules, see: @.claude/rules/tokens.md
-For forbidden patterns, see: @.claude/rules/forbidden.md
+New Composed component 필요 시: Qualification 기준 충족 확인 → 승인 요청 후 생성. `className` prop 금지.

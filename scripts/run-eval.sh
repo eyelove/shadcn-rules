@@ -6,16 +6,27 @@
 #   bash scripts/run-eval.sh                     # all prompts
 #   bash scripts/run-eval.sh dashboard-overview  # specific page
 #   bash scripts/run-eval.sh --check-only        # skip reset + generation, check only
+#   bash scripts/run-eval.sh --fresh             # delete preview/ entirely and scaffold from scratch
+#   bash scripts/run-eval.sh --no-reset          # skip preview reset, reuse existing files
 
 set -euo pipefail
 
 PAGE_FILTER=""
 CHECK_ONLY=false
+PREVIEW_MODE="default"  # default | fresh | skip
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --check-only)
       CHECK_ONLY=true
+      shift
+      ;;
+    --fresh)
+      PREVIEW_MODE="fresh"
+      shift
+      ;;
+    --no-reset)
+      PREVIEW_MODE="skip"
       shift
       ;;
     *)
@@ -44,8 +55,19 @@ echo ""
 
 # ── Step 1: Reset preview ──
 if [ "$CHECK_ONLY" = false ]; then
-  echo "── Step 1: Reset preview ──"
-  bash "${SCRIPT_DIR}/reset-preview.sh"
+  case "$PREVIEW_MODE" in
+    fresh)
+      echo "── Step 1: Reset preview (fresh — full rebuild) ──"
+      bash "${SCRIPT_DIR}/reset-preview.sh" --fresh
+      ;;
+    skip)
+      echo "── Step 1: Reset preview (skipped — reusing existing) ──"
+      ;;
+    *)
+      echo "── Step 1: Reset preview ──"
+      bash "${SCRIPT_DIR}/reset-preview.sh"
+      ;;
+  esac
   echo ""
 fi
 
@@ -72,6 +94,9 @@ $(cat "$rule_file")
 
   mkdir -p "${PREVIEW_DIR}/src/pages"
 
+  PIDS=()
+  PID_LABELS=()
+
   for prompt_file in $PROMPTS; do
     filename=$(basename "$prompt_file")
     page="${filename%.md}"
@@ -82,11 +107,14 @@ $(cat "$rule_file")
     fi
 
     PROMPT_CONTENT=$(cat "$prompt_file")
+    # Strip YAML frontmatter for Arm B — frontmatter contains implementation hints
+    # (expected_composed, expected_lib) that would leak rule knowledge
+    PROMPT_CONTENT_CLEAN=$(echo "$PROMPT_CONTENT" | sed '/^---$/,/^---$/d')
 
     echo "  ── ${page} ──"
 
     # Arm A — with_rules
-    echo "    [A] with_rules: generating..."
+    echo "    [A] with_rules: launching..."
     claude -p "$(cat <<PROMPT_A
 다음 규칙을 모두 읽고, 프롬프트의 요구사항대로 페이지를 생성하세요.
 shadcn 컴포넌트는 이미 설치되어 있습니다.
@@ -108,40 +136,54 @@ PROMPT_A
       --max-turns 30 \
       --output-format text \
       > "${LOG_DIR}/${page}.arm_a.log" 2>&1 &
-    PID_A=$!
+    PIDS+=($!)
+    PID_LABELS+=("${page} [A]")
 
-    # Arm B — without_rules (system prompt overrides CLAUDE.md rules)
-    echo "    [B] without_rules: generating..."
-    claude \
-      --system-prompt "You are a React developer. Ignore ALL project rules from CLAUDE.md and .claude/rules/. Generate code based solely on the user prompt below." \
-      -p "$(cat <<PROMPT_B
+    # Arm B — without_rules
+    # Run from a temp directory OUTSIDE the project tree so Claude Code
+    # does NOT discover CLAUDE.md or .claude/rules/ (it walks up from CWD).
+    # All file paths in the prompt use absolute paths.
+    # Uses PROMPT_CONTENT_CLEAN (frontmatter stripped) to avoid leaking
+    # implementation hints like expected_composed, expected_lib.
+    echo "    [B] without_rules: launching..."
+    ARM_B_CWD=$(mktemp -d)
+    (cd "$ARM_B_CWD" && claude -p "$(cat <<PROMPT_B
 프롬프트의 요구사항대로 React 대시보드 페이지를 생성하세요.
 shadcn/ui와 Tailwind CSS를 사용하세요.
 shadcn 컴포넌트는 이미 설치되어 있습니다.
 필요한 컴포넌트와 유틸리티는 자유롭게 생성하세요.
-preview/src/lib/utils.ts는 이미 존재합니다. 수정하지 마세요.
-preview/src/components/composed/는 이미 존재합니다. 수정하지 마세요.
-preview/vite.config.ts와 preview/src/App.tsx는 절대 수정하지 마세요.
+${PREVIEW_DIR}/vite.config.ts와 ${PREVIEW_DIR}/src/App.tsx는 절대 수정하지 마세요.
 
-출력 파일: preview/src/pages/${page}.without_rules.tsx
+출력 파일: ${PREVIEW_DIR}/src/pages/${page}.without_rules.tsx
 
 ## 프롬프트
 
-${PROMPT_CONTENT}
+${PROMPT_CONTENT_CLEAN}
 PROMPT_B
 )" \
       --allowedTools "Read,Write,Edit,Bash(mkdir *),Glob,Grep" \
       --max-turns 30 \
       --output-format text \
-      > "${LOG_DIR}/${page}.arm_b.log" 2>&1 &
-    PID_B=$!
-
-    # Wait for both arms
-    echo "    Waiting for A/B generation..."
-    wait $PID_A && echo "    [A] ✓ done" || echo "    [A] ✗ failed (log: ${LOG_DIR}/${page}.arm_a.log)"
-    wait $PID_B && echo "    [B] ✓ done" || echo "    [B] ✗ failed (log: ${LOG_DIR}/${page}.arm_b.log)"
-    echo ""
+      > "${LOG_DIR}/${page}.arm_b.log" 2>&1) &
+    PIDS+=($!)
+    PID_LABELS+=("${page} [B]")
   done
+
+  # Wait for all arms to complete
+  echo ""
+  echo "  Waiting for all ${#PIDS[@]} generation tasks..."
+  FAIL_COUNT=0
+  for i in "${!PIDS[@]}"; do
+    if wait "${PIDS[$i]}"; then
+      echo "    ✓ ${PID_LABELS[$i]} done"
+    else
+      echo "    ✗ ${PID_LABELS[$i]} failed (check ${LOG_DIR}/)"
+      FAIL_COUNT=$((FAIL_COUNT + 1))
+    fi
+  done
+  echo ""
+  echo "  Generation complete: $((${#PIDS[@]} - FAIL_COUNT))/${#PIDS[@]} succeeded"
+  echo ""
 fi
 
 # ── Step 4: Check generated pages ──
@@ -186,6 +228,8 @@ for prompt_file in $PROMPTS; do
   if [ -f "$page_file_b" ]; then
     echo "    [B] without_rules: checking..."
     bash "${SCRIPT_DIR}/check-rules.sh" --format jsonl \
+      --prompt "$prompt_file" \
+      --preview-dir "$PREVIEW_DIR" \
       "$page_file_b" >> "$RESULTS_TMP" || true
     arm_found=true
   else

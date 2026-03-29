@@ -8,40 +8,63 @@ expected_ui:
   - textarea
   - select
   - field
+  - popover
+  - calendar
+  - switch
+  - radio-group
+  - combobox
 expected_composed: []
-expected_lib: []
+expected_lib:
+  - formatDate
 ---
 
-# Campaign Form 페이지 생성
+# 캠페인 생성 폼
 
-아래 요구사항에 맞는 캠페인 생성/편집 폼 페이지를 작성하세요.
+마케팅팀에서 새 캠페인을 등록할 때 사용하는 폼 페이지입니다.
+캠페인 기본 정보부터 예산, 타겟팅, 일정까지 한 화면에서 입력합니다.
+입력 필드가 많으므로 섹션을 나누어 구조화해야 합니다.
 
-## 요구사항
+## 페이지 헤더
+- 캠페인 목록(/campaigns)으로 돌아가는 뒤로가기 버튼
+- 제목: "캠페인 생성"
 
-### 페이지 헤더
-- Back 버튼 (campaigns 목록으로)
-- 제목: "Create Campaign"
+## 폼 (3개 섹션)
 
-### 폼 구조 (단일 Card)
-#### Section 1 — Basic Info (FieldSet)
-- Campaign Name (Input, required)
-- Status (Select: Active, Draft, Paused)
-- Description (Textarea, optional)
+### 섹션 1 — 기본 정보
 
-#### Section 2 — Budget & Targeting (FieldSet)
-- Daily Budget (Input number)
-- Region (Select: US, EU, APAC)
-- Start Date / End Date (Input date, 2-column grid)
+| 필드 | 입력 방식 | 설명 |
+|------|----------|------|
+| 캠페인명 | 텍스트 입력 (필수) | placeholder: "캠페인명을 입력하세요" |
+| 광고주 | 검색 가능한 선택 (30개 이상 목록에서 타이핑으로 필터링) | placeholder: "광고주 검색..." |
+| 설명 | 여러 줄 텍스트 입력 (선택) | placeholder: "캠페인 설명 (선택사항)" |
 
-### CardFooter
-- Cancel (outline) + Save (submit)
-- form id 연결
+### 섹션 2 — 캠페인 설정
 
-### 기타
-- react-hook-form + Controller 패턴 사용
-- FieldError 표시
-- 로케일: en-US
+| 필드 | 입력 방식 | 설명 |
+|------|----------|------|
+| 캠페인 목표 | 단일 선택 (3개 중 1개) | 브랜드 인지도, 전환, 트래픽 |
+| 캠페인 유형 | 카드형 단일 선택 (제목+설명 포함) | 검색 광고("키워드 기반 검색 결과에 노출"), 디스플레이 광고("배너 및 이미지 형태로 노출"), 동영상 광고("영상 콘텐츠로 노출") |
+| 채널 | 드롭다운 선택 | Google Ads, Meta Ads, Naver SA, Kakao Moment |
+| 자동 최적화 | 켜기/끄기 토글 | "성과에 따라 입찰가를 자동으로 조정합니다" |
 
-## 출력
-- App.tsx에 라우팅을 연결하세요
+### 섹션 3 — 예산 & 일정
+
+| 필드 | 입력 방식 | 설명 |
+|------|----------|------|
+| 일일 예산 | 숫자 입력 (필수) | 안내: "일일 최대 지출 금액 (원)" |
+| 시작일 | 날짜 선택 (달력 팝업) | 시작일과 종료일을 나란히 배치 |
+| 종료일 | 날짜 선택 (달력 팝업) | |
+
+- 날짜 표시 형식: YYYY-MM-DD
+
+## 하단 버튼
+- 취소 (보조 스타일) + 저장 (주요 스타일)
+
+## 유효성 검사
+- 캠페인명: 필수 ("캠페인명은 필수입니다")
+- 일일 예산: 필수 ("예산은 필수입니다"), 최소 1000 ("최소 1,000원 이상")
+- 에러 시 해당 필드 아래에 빨간 에러 메시지
+
+## 기타
+- 한국어 UI
 - 단일 페이지 컴포넌트, 목 데이터 인라인
