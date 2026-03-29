@@ -2,9 +2,19 @@
 # Reset preview to clean state for eval.
 # If preview/ doesn't exist, scaffolds from scratch.
 # If it exists, removes only AI-generated files (pages, composed, lib) and reapplies templates.
-# Usage: bash scripts/reset-preview.sh
+# Usage:
+#   bash scripts/reset-preview.sh            # default: clean AI-generated files only
+#   bash scripts/reset-preview.sh --fresh    # delete preview/ entirely and scaffold from scratch
 
 set -euo pipefail
+
+FRESH=false
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --fresh) FRESH=true; shift ;;
+    *) shift ;;
+  esac
+done
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="${SCRIPT_DIR}/.."
@@ -12,6 +22,13 @@ PREVIEW_DIR="${ROOT_DIR}/preview"
 TEMPLATES_DIR="${SCRIPT_DIR}/templates"
 
 echo "Resetting preview..."
+
+# ── Fresh mode: delete entire preview/ to force full scaffold ──
+if [ "$FRESH" = true ] && [ -d "${PREVIEW_DIR}" ]; then
+  echo "  --fresh: removing preview/ entirely..."
+  rm -rf "${PREVIEW_DIR}"
+  echo "  ✓ preview/ removed"
+fi
 
 # ── Scaffold if preview doesn't exist ──
 if [ ! -f "${PREVIEW_DIR}/package.json" ]; then
@@ -31,17 +48,28 @@ if [ ! -f "${PREVIEW_DIR}/package.json" ]; then
 
   # Install shadcn components used in eval
   echo "Installing shadcn components..."
-  npx shadcn@latest add card badge input textarea select field chart separator --yes 2>&1
+  npx shadcn@latest add card badge input textarea select field chart separator popover calendar switch --yes 2>&1
   echo "  ✓ shadcn components installed"
 
-  # Patch vite.config.ts — add optimizeDeps for snapshot imports
+  # Install runtime dependencies used by eval-generated pages and composed components.
+  # These are imported by AI-generated pages (react-hook-form, lucide-react, recharts)
+  # and by composed components (DataTable uses @tanstack/react-table).
+  # optimizeDeps.include alone is not enough — packages must actually be installed.
+  echo "Installing runtime dependencies..."
+  cd "${PREVIEW_DIR}" && pnpm add react-hook-form lucide-react recharts @tanstack/react-table 2>&1
+  echo "  ✓ runtime dependencies installed"
+
+  # Patch vite.config.ts — optimizeDeps for snapshot imports
   # App.viewer.tsx uses import.meta.glob to load snapshot pages outside preview/.
-  # Vite's dep scanner can't resolve dependencies from those external paths.
-  # Declaring them in optimizeDeps.include forces pre-bundling without path resolution.
+  # Problem: Vite's dep scanner follows those imports into tests/snapshots/ and fails
+  # because node_modules is in preview/, not in the snapshot directory.
+  # Fix: entries limits the scan to preview/src only, include forces pre-bundling
+  # of packages that snapshot files import (resolved from preview/node_modules).
   if [ -f "${PREVIEW_DIR}/vite.config.ts" ]; then
     sed -i '' 's/plugins: \[react(), tailwindcss()\],/plugins: [react(), tailwindcss()],\
   optimizeDeps: {\
-    include: ["react-hook-form", "lucide-react", "recharts"],\
+    entries: ["src\/main.tsx"],\
+    include: ["react-hook-form", "lucide-react", "recharts", "@tanstack\/react-table"],\
   },/' "${PREVIEW_DIR}/vite.config.ts"
     echo "  ✓ vite.config.ts patched (optimizeDeps)"
   fi

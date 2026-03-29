@@ -37,6 +37,9 @@ NEVER format numbers inline in JSX. NEVER hardcode currency symbols in JSX templ
 | Table cell (quantity) | No abbreviation, comma-separated | `125,000` |
 | Percent | 2 decimal places | `2.74%` |
 | Delta | Sign + value | `+12.5%`, `-0.3%`, `+4건` |
+| Date (default) | `YYYY-MM-DD` | `2026-03-29` |
+| Date (long) | `YYYY년 MM월 DD일` | `2026년 03월 29일` |
+| Date (slash) | `YYYY/MM/DD` | `2026/03/29` |
 
 **ko-KR abbreviation scale:**
 ```
@@ -61,12 +64,13 @@ NEVER format numbers inline in JSX. NEVER hardcode currency symbols in JSX templ
 | Table cell (quantity) | No abbreviation, comma-separated | `125,000` |
 | Percent | 2 decimal places | `2.74%` |
 | Delta | Sign + value | `+12.5%`, `-0.3%` |
+| Date | `Mon DD, YYYY` | `Mar 29, 2026` |
 
 ## Format Utility Interface
 
 All functions live in `@/lib/format`. Import via:
 ```tsx
-import { formatCurrency, formatCurrencyCompact, formatCompact, formatNumber, formatPercent, formatDelta } from "@/lib/format"
+import { formatCurrency, formatCurrencyCompact, formatCompact, formatNumber, formatPercent, formatDelta, formatDate } from "@/lib/format"
 ```
 
 ### FormatOptions
@@ -103,6 +107,12 @@ formatPercent(0.0274, { locale: "en-US" })               // "2.74%"
 // Delta — always includes sign prefix
 formatDelta(0.125)                                        // "+12.5%"
 formatDelta(-0.003)                                       // "-0.3%"
+
+// Date — locale-aware date formatting
+formatDate(new Date("2026-03-29"), { locale: "ko-KR" })                   // "2026-03-29"
+formatDate(new Date("2026-03-29"), { locale: "ko-KR", format: "long" })   // "2026년 03월 29일"
+formatDate(new Date("2026-03-29"), { locale: "ko-KR", format: "slash" })  // "2026/03/29"
+formatDate(new Date("2026-03-29"), { locale: "en-US" })                   // "Mar 29, 2026"
 ```
 
 ## Context Application
@@ -117,6 +127,8 @@ Use this table to determine which function to call based on where the value appe
 | Table cell (money) | `formatCurrency` | `12,500원` | `$12,500.00` |
 | Table cell (quantity) | `formatNumber` | `125,000` | `125,000` |
 | Table cell (ratio) | `formatPercent` | `2.74%` | `2.74%` |
+| Date (single) | `formatDate` | `2026-03-29` | `Mar 29, 2026` |
+| Date range | `formatDate` × 2 | `2026-03-01 - 2026-03-29` | `Mar 1, 2026 - Mar 29, 2026` |
 
 // WHY: This lookup table eliminates guesswork. Given a UI context and data type, there is exactly
 // one correct function to call — AI cannot pick the wrong one.
@@ -167,6 +179,26 @@ formatCurrency(12500)
 
 // CORRECT — explicit locale
 formatCurrency(12500, { locale: "ko-KR", currency: "KRW" })
+```
+
+### FMT-04 — No Inline Date Formatting
+
+NEVER call `date-fns` `format()`, `toLocaleDateString()`, or manual date string concatenation directly in JSX.
+Always use `formatDate` from `@/lib/format`.
+// WHY: date-fns format strings differ by context (PPP, yyyy-MM-dd, etc.). Centralizing in formatDate
+// ensures locale-consistent output and prevents format string proliferation.
+
+```tsx
+// FORBIDDEN — date-fns format directly in JSX
+import { format } from "date-fns"
+<span>{format(date, "yyyy-MM-dd")}</span>
+<span>{format(date, "PPP")}</span>
+<span>{date.toLocaleDateString("ko-KR")}</span>
+
+// CORRECT — format utility
+import { formatDate } from "@/lib/format"
+<span>{formatDate(date, { locale: "ko-KR" })}</span>
+<span>{formatDate(date, { locale: "ko-KR", format: "long" })}</span>
 ```
 
 ## Escape Hatch

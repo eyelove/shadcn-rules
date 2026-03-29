@@ -6,16 +6,27 @@
 #   bash scripts/run-eval.sh                     # all prompts
 #   bash scripts/run-eval.sh dashboard-overview  # specific page
 #   bash scripts/run-eval.sh --check-only        # skip reset + generation, check only
+#   bash scripts/run-eval.sh --fresh             # delete preview/ entirely and scaffold from scratch
+#   bash scripts/run-eval.sh --no-reset          # skip preview reset, reuse existing files
 
 set -euo pipefail
 
 PAGE_FILTER=""
 CHECK_ONLY=false
+PREVIEW_MODE="default"  # default | fresh | skip
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --check-only)
       CHECK_ONLY=true
+      shift
+      ;;
+    --fresh)
+      PREVIEW_MODE="fresh"
+      shift
+      ;;
+    --no-reset)
+      PREVIEW_MODE="skip"
       shift
       ;;
     *)
@@ -44,8 +55,19 @@ echo ""
 
 # ── Step 1: Reset preview ──
 if [ "$CHECK_ONLY" = false ]; then
-  echo "── Step 1: Reset preview ──"
-  bash "${SCRIPT_DIR}/reset-preview.sh"
+  case "$PREVIEW_MODE" in
+    fresh)
+      echo "── Step 1: Reset preview (fresh — full rebuild) ──"
+      bash "${SCRIPT_DIR}/reset-preview.sh" --fresh
+      ;;
+    skip)
+      echo "── Step 1: Reset preview (skipped — reusing existing) ──"
+      ;;
+    *)
+      echo "── Step 1: Reset preview ──"
+      bash "${SCRIPT_DIR}/reset-preview.sh"
+      ;;
+  esac
   echo ""
 fi
 

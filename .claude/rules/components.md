@@ -40,6 +40,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
 import { Label } from "@/components/ui/label"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { Combobox, ComboboxInput, ComboboxContent, ComboboxList, ComboboxItem, ComboboxEmpty } from "@/components/ui/combobox"
+import { Switch } from "@/components/ui/switch"
 ```
 
 // WHY: shadcn components are well-documented, tree-shakeable, and accessible by default.
@@ -107,6 +111,54 @@ For detailed Props contracts and usage examples, see:
 - @.claude/rules/data-table.md — DataTable columns, actions, render functions
 - @.claude/rules/cards.md — KpiCard props, delta formatting, grid layout
 - @.claude/rules/fields.md — form field patterns with shadcn primitives
+
+## Input Component Selection
+
+대시보드에서 사용하는 입력 컴포넌트 선택 기준. 맥락에 따라 하나만 선택한다.
+
+### SELECT-01 — Select vs Combobox
+
+```
+옵션이 고정이고 ~10개 이하?
+  ├─ Yes → Select (Radix)
+  └─ No
+      └─ 옵션이 많거나 서버에서 로드?
+          └─ Yes → Combobox (검색 가능)
+```
+
+| 기준 | Select | Combobox |
+|------|--------|----------|
+| 옵션 수 | ~10개 이하, 고정 목록 | 10개 이상 또는 동적/Ajax |
+| 검색 | 없음 | 타이핑 즉시 필터링 |
+| 다중 선택 | 미지원 | `multiple` prop 지원 |
+| 대시보드 사용처 | 상태 필터, 차트 기간(7d/30d), 카테고리 | 캠페인 선택, 광고주 검색, 매체 선택 |
+| 배치 위치 | CardAction, 필터 바, 폼 Field | 필터 바, 폼 Field |
+
+// WHY: 옵션이 적으면 Select가 간결하고 빠르다. 옵션이 많으면 검색 없이는 사용 불가능하므로 Combobox.
+// Native `<select>`는 대시보드에서 사용하지 않는다 — 토큰 시스템 적용 불가, 테마 불일치.
+
+### DATE-01 — Date Picker 선택
+
+대시보드에서 Calendar 인라인은 사용하지 않는다. 항상 Popover 안에 넣어 공간을 절약한다.
+
+```
+단일 날짜 선택? (폼 필드)
+  └─ Popover + Calendar mode="single"
+
+날짜 범위 + 프리셋? (차트/리포트 필터)
+  └─ Popover + Select(프리셋) + Calendar mode="range" numberOfMonths={2}
+```
+
+| 시나리오 | 구성 | 배치 위치 |
+|---------|------|---------|
+| 폼 날짜 입력 | `Popover` + `Calendar mode="single"` | `Field` in PAGE-03 |
+| 차트/리포트 기간 필터 | `Popover` + `Select`(프리셋) + `Calendar mode="range"` | `CardAction` in CARD-02, 페이지 헤더 |
+
+// WHY: Calendar 인라인은 예약 시스템처럼 달력이 항상 보여야 하는 경우에만 적합하다.
+// 대시보드에서는 공간 효율을 위해 Popover 트리거로 숨긴다.
+
+폼 필드에서의 Date Picker, Combobox 코드 패턴: @.claude/rules/fields.md FIELD-06, FIELD-07
+차트 필터에서의 Date Range Picker 패턴: @.claude/rules/cards.md CARD-02
 
 ## Cell Functions in DataTable
 

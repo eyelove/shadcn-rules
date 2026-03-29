@@ -209,7 +209,11 @@ check "TOKEN-01" "No Tailwind fixed rounded-sm (use token)" 'rounded-sm' "$TARGE
 
 # 17. FMT-01 — No inline number formatting (use @/lib/format utilities)
 check "FMT-01" "No inline toLocaleString() formatting" 'toLocaleString(' "$TARGET"
+check "FMT-01" "No inline toLocaleDateString() formatting" 'toLocaleDateString(' "$TARGET"
 check "FMT-01" "No inline Intl.NumberFormat" 'Intl\.NumberFormat' "$TARGET"
+
+# 19. FMT-04 — No inline date-fns format() in JSX (use formatDate from @/lib/format)
+check "FMT-04" "No date-fns format() import (use formatDate from @/lib/format)" 'from "date-fns"' "$TARGET"
 
 # 18. FMT-02 — No hardcoded currency symbols in JSX templates
 check "FMT-02" "No hardcoded dollar sign in JSX" '>[^<]*\$[{<]\|{\`\$\|>\$<' "$TARGET"
