@@ -74,6 +74,7 @@ function getPageGroups(snap: SnapshotInfo): string[] {
 
 type CompareMode = "ab" | "run-vs-run"
 type Arm = "with_rules" | "without_rules"
+type ViewFilter = "both" | "with_rules" | "without_rules"
 
 function getVerdict(delta: number): string {
   if (delta >= 20) return "EFFECTIVE"
@@ -124,6 +125,7 @@ function ScoreBar({ meta, pageName, arm }: { meta: SnapshotMeta | null; pageName
 function App() {
   const [snapshots] = useState(() => parseSnapshots())
   const [mode, setMode] = useState<CompareMode>("ab")
+  const [viewFilter, setViewFilter] = useState<ViewFilter>("both")
   // A/B mode state
   const [selectedSnap, setSelectedSnap] = useState("")
   const [selectedPage, setSelectedPage] = useState("")
@@ -253,6 +255,15 @@ function App() {
             >
               {pageGroups.map((pg) => <option key={pg} value={pg}>{pg}</option>)}
             </select>
+            <select
+              value={viewFilter}
+              onChange={(e) => setViewFilter(e.target.value as ViewFilter)}
+              className="text-sm border border-border rounded px-2 py-1 bg-background"
+            >
+              <option value="both">Both</option>
+              <option value="with_rules">With Rules only</option>
+              <option value="without_rules">Without Rules only</option>
+            </select>
           </>
         ) : (
           <>
@@ -293,51 +304,55 @@ function App() {
 
       {/* Compare panels */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left panel */}
-        <div className="flex-1 flex flex-col border-r border-border overflow-hidden">
-          <div className="px-3 py-2 border-b border-border bg-muted/30 text-xs text-muted-foreground font-medium">
-            {mode === "ab" ? (
-              <>{selectedPage} — <span className="text-foreground">A (with_rules)</span></>
-            ) : (
-              <>{leftSnap} / {runPage}.{runArm}</>
-            )}
+        {/* Left panel (with_rules in A/B mode) */}
+        {(mode !== "ab" || viewFilter === "both" || viewFilter === "with_rules") && (
+          <div className={`flex-1 flex flex-col overflow-hidden ${mode !== "ab" || viewFilter === "both" ? "border-r border-border" : ""}`}>
+            <div className="px-3 py-2 border-b border-border bg-muted/30 text-xs text-muted-foreground font-medium">
+              {mode === "ab" ? (
+                <>{selectedPage} — <span className="text-foreground">A (with_rules)</span></>
+              ) : (
+                <>{leftSnap} / {runPage}.{runArm}</>
+              )}
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <Suspense fallback={Loading}>
+                {LeftComp ? <LeftComp /> : Empty}
+              </Suspense>
+            </div>
+            <div className="px-3 py-2 border-t border-border bg-muted/30 text-xs flex gap-4">
+              {mode === "ab" ? (
+                <ScoreBar meta={currentSnap?.meta ?? null} pageName={selectedPage} arm="with_rules" />
+              ) : (
+                <ScoreBar meta={snapshots.get(leftSnap)?.meta ?? null} pageName={runPage} arm={runArm} />
+              )}
+            </div>
           </div>
-          <div className="flex-1 overflow-y-auto">
-            <Suspense fallback={Loading}>
-              {LeftComp ? <LeftComp /> : Empty}
-            </Suspense>
-          </div>
-          <div className="px-3 py-2 border-t border-border bg-muted/30 text-xs flex gap-4">
-            {mode === "ab" ? (
-              <ScoreBar meta={currentSnap?.meta ?? null} pageName={selectedPage} arm="with_rules" />
-            ) : (
-              <ScoreBar meta={snapshots.get(leftSnap)?.meta ?? null} pageName={runPage} arm={runArm} />
-            )}
-          </div>
-        </div>
+        )}
 
-        {/* Right panel */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="px-3 py-2 border-b border-border bg-muted/30 text-xs text-muted-foreground font-medium">
-            {mode === "ab" ? (
-              <>{selectedPage} — <span className="text-foreground">B (without_rules)</span></>
-            ) : (
-              <>{rightSnap} / {runPage}.{runArm}</>
-            )}
+        {/* Right panel (without_rules in A/B mode) */}
+        {(mode !== "ab" || viewFilter === "both" || viewFilter === "without_rules") && (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="px-3 py-2 border-b border-border bg-muted/30 text-xs text-muted-foreground font-medium">
+              {mode === "ab" ? (
+                <>{selectedPage} — <span className="text-foreground">B (without_rules)</span></>
+              ) : (
+                <>{rightSnap} / {runPage}.{runArm}</>
+              )}
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <Suspense fallback={Loading}>
+                {RightComp ? <RightComp /> : Empty}
+              </Suspense>
+            </div>
+            <div className="px-3 py-2 border-t border-border bg-muted/30 text-xs flex gap-4">
+              {mode === "ab" ? (
+                <ScoreBar meta={currentSnap?.meta ?? null} pageName={selectedPage} arm="without_rules" />
+              ) : (
+                <ScoreBar meta={snapshots.get(rightSnap)?.meta ?? null} pageName={runPage} arm={runArm} />
+              )}
+            </div>
           </div>
-          <div className="flex-1 overflow-y-auto">
-            <Suspense fallback={Loading}>
-              {RightComp ? <RightComp /> : Empty}
-            </Suspense>
-          </div>
-          <div className="px-3 py-2 border-t border-border bg-muted/30 text-xs flex gap-4">
-            {mode === "ab" ? (
-              <ScoreBar meta={currentSnap?.meta ?? null} pageName={selectedPage} arm="without_rules" />
-            ) : (
-              <ScoreBar meta={snapshots.get(rightSnap)?.meta ?? null} pageName={runPage} arm={runArm} />
-            )}
-          </div>
-        </div>
+        )}
       </div>
 
       {/* A/B Summary Footer */}
