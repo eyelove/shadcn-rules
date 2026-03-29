@@ -75,8 +75,9 @@ interface DataTableProps<T> {
 - Metric 컬럼: `align: "right"`, cell에 `<span className="tabular-nums">{formatNumber/formatCurrency/formatPercent(value, { locale })}</span>`
 - Status/Badge 컬럼: `<Badge variant="outline">{row.status}</Badge>`
 - Actions 컬럼: `DropdownMenu` with `Button variant="ghost" size="icon"`, 삭제 항목은 `className="text-destructive"`
+- Date 컬럼: cell에 `formatDate(row.date, { locale })` — 직접 `toLocaleDateString()` 또는 `date-fns format()` 사용 금지
 - Switch 컬럼: `align: "center"`, `enableSorting: false`
-- Format utilities: `formatNumber`, `formatCurrency`, `formatPercent` from `@/lib/format` — 항상 explicit locale 전달
+- Format utilities: `formatNumber`, `formatCurrency`, `formatPercent`, `formatDate` from `@/lib/format` — 항상 explicit locale 전달
 
 ## Cell Styling Rules
 
