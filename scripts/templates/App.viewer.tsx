@@ -69,7 +69,7 @@ function getPageGroups(snap: SnapshotInfo): string[] {
   for (const p of Object.keys(snap.pages)) {
     groups.add(p.replace(/\.(with_rules|without_rules)$/, ""))
   }
-  return Array.from(groups).sort()
+  return Array.from(groups).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
 }
 
 type CompareMode = "ab" | "run-vs-run"
@@ -136,7 +136,7 @@ function App() {
   const [LeftComp, setLeftComp] = useState<ComponentType | null>(null)
   const [RightComp, setRightComp] = useState<ComponentType | null>(null)
 
-  const snapIds = Array.from(snapshots.keys()).sort()
+  const snapIds = Array.from(snapshots.keys()).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
 
   // Initialize defaults
   useEffect(() => {
@@ -162,7 +162,7 @@ function App() {
     if (!runPage) {
       const allPages = Array.from(
         new Set(Array.from(snapshots.values()).flatMap((s) => Object.keys(s.pages)))
-      ).sort()
+      ).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
       if (allPages.length > 0) setRunPage(allPages[0])
     }
   }, [snapshots])
@@ -200,7 +200,7 @@ function App() {
         .flatMap((s) => Object.keys(s.pages))
         .map((p) => p.replace(/\.(with_rules|without_rules)$/, ""))
     )
-  ).sort()
+  ).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
 
   const Loading = (
     <div className="flex h-full items-center justify-center text-sm text-muted-foreground">

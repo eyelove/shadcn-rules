@@ -107,6 +107,9 @@ $(cat "$rule_file")
     fi
 
     PROMPT_CONTENT=$(cat "$prompt_file")
+    # Strip YAML frontmatter for Arm B — frontmatter contains implementation hints
+    # (expected_composed, expected_lib) that would leak rule knowledge
+    PROMPT_CONTENT_CLEAN=$(echo "$PROMPT_CONTENT" | sed '/^---$/,/^---$/d')
 
     echo "  ── ${page} ──"
 
@@ -136,30 +139,32 @@ PROMPT_A
     PIDS+=($!)
     PID_LABELS+=("${page} [A]")
 
-    # Arm B — without_rules (system prompt overrides CLAUDE.md rules)
+    # Arm B — without_rules
+    # Run from a temp directory OUTSIDE the project tree so Claude Code
+    # does NOT discover CLAUDE.md or .claude/rules/ (it walks up from CWD).
+    # All file paths in the prompt use absolute paths.
+    # Uses PROMPT_CONTENT_CLEAN (frontmatter stripped) to avoid leaking
+    # implementation hints like expected_composed, expected_lib.
     echo "    [B] without_rules: launching..."
-    claude \
-      --system-prompt "You are a React developer. Ignore ALL project rules from CLAUDE.md and .claude/rules/. Generate code based solely on the user prompt below." \
-      -p "$(cat <<PROMPT_B
+    ARM_B_CWD=$(mktemp -d)
+    (cd "$ARM_B_CWD" && claude -p "$(cat <<PROMPT_B
 프롬프트의 요구사항대로 React 대시보드 페이지를 생성하세요.
 shadcn/ui와 Tailwind CSS를 사용하세요.
 shadcn 컴포넌트는 이미 설치되어 있습니다.
 필요한 컴포넌트와 유틸리티는 자유롭게 생성하세요.
-preview/src/lib/utils.ts는 이미 존재합니다. 수정하지 마세요.
-preview/src/components/composed/는 이미 존재합니다. 수정하지 마세요.
-preview/vite.config.ts와 preview/src/App.tsx는 절대 수정하지 마세요.
+${PREVIEW_DIR}/vite.config.ts와 ${PREVIEW_DIR}/src/App.tsx는 절대 수정하지 마세요.
 
-출력 파일: preview/src/pages/${page}.without_rules.tsx
+출력 파일: ${PREVIEW_DIR}/src/pages/${page}.without_rules.tsx
 
 ## 프롬프트
 
-${PROMPT_CONTENT}
+${PROMPT_CONTENT_CLEAN}
 PROMPT_B
 )" \
       --allowedTools "Read,Write,Edit,Bash(mkdir *),Glob,Grep" \
       --max-turns 30 \
       --output-format text \
-      > "${LOG_DIR}/${page}.arm_b.log" 2>&1 &
+      > "${LOG_DIR}/${page}.arm_b.log" 2>&1) &
     PIDS+=($!)
     PID_LABELS+=("${page} [B]")
   done
@@ -223,6 +228,8 @@ for prompt_file in $PROMPTS; do
   if [ -f "$page_file_b" ]; then
     echo "    [B] without_rules: checking..."
     bash "${SCRIPT_DIR}/check-rules.sh" --format jsonl \
+      --prompt "$prompt_file" \
+      --preview-dir "$PREVIEW_DIR" \
       "$page_file_b" >> "$RESULTS_TMP" || true
     arm_found=true
   else

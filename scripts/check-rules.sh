@@ -227,20 +227,46 @@ fi
 # 9. Composed imports — REMOVED
 # Not all pages need Composed components (e.g., form pages). Per-file check produces false positives.
 
-# 10. Uses token-based colors (optional — Composed components handle tokens internally)
-# Token classes may not appear in page-level code if Composed components encapsulate styling
-TOKEN_USAGE=$(grep -rn 'bg-background\|bg-card\|bg-muted\|var(--' $TARGET 2>/dev/null)
-CHECKS=$((CHECKS + 1))
-PASSED=$((PASSED + 1))
-if [ "$FORMAT" = "jsonl" ]; then
-  echo "{\"rule\":\"TOKEN-02\",\"desc\":\"Uses token-based styling\",\"file\":\"${TARGET}\",\"result\":\"PASS\"}"
-else
-  if [ -n "$TOKEN_USAGE" ]; then
-    echo -e "${GREEN}PASS${NC} [TOKEN-02] Uses token-based styling (explicit tokens found)"
-  else
-    echo -e "${GREEN}PASS${NC} [TOKEN-02] Uses token-based styling (tokens encapsulated in Composed components — correct)"
-  fi
+# --- POSITIVE PATTERN CHECKS ---
+# These verify that rule-specific patterns are actually used.
+# Without rules, Claude typically skips these — this is where A/B difference shows.
+
+# CARD-USE: Page uses Card component for sections
+check_absent "CARD-USE" "Uses Card component for sections" '<Card' "$TARGET"
+
+# CARD-HEADER: Card has proper CardHeader structure
+check_absent "CARD-HEADER" "Uses CardHeader inside Card" '<CardHeader' "$TARGET"
+
+# CHART-CONTAINER: Uses shadcn ChartContainer (not raw ResponsiveContainer)
+HAS_CHART=$(grep -rn 'Chart\|LineChart\|BarChart\|AreaChart\|PieChart' $TARGET 2>/dev/null | grep -v 'import' | grep -v 'ChartContainer\|ChartTooltip\|ChartConfig' | head -1)
+if [ -n "$HAS_CHART" ]; then
+  check_absent "CHART-CONTAINER" "Uses ChartContainer (not raw ResponsiveContainer)" 'ChartContainer' "$TARGET"
+  check_absent "CHART-TOOLTIP" "Uses ChartTooltipContent (not raw Recharts Tooltip)" 'ChartTooltipContent' "$TARGET"
 fi
+
+# TOKEN-02: Uses semantic token classes (not just Tailwind primitives)
+check_absent "TOKEN-02" "Uses token-based colors (bg-background/bg-card/bg-muted/text-foreground)" 'bg-background\|bg-card\|bg-muted\|text-foreground\|text-muted-foreground\|var(--chart-' "$TARGET"
+
+# FMT-USE: Uses @/lib/format utility imports
+HAS_NUMBERS=$(grep -rn '[0-9]\{3,\}\|percent\|currency\|금액\|숫자' $TARGET 2>/dev/null | head -1)
+if [ -n "$HAS_NUMBERS" ]; then
+  check_absent "FMT-USE" "Imports from @/lib/format" '@/lib/format' "$TARGET"
+fi
+
+# COMPOSED-USE: Uses barrel import from @/components/composed (when composed components are used)
+HAS_COMPOSED=$(grep -rn 'DataTable\|KpiCard\|SearchBar' $TARGET 2>/dev/null | head -1)
+if [ -n "$HAS_COMPOSED" ]; then
+  check_absent "COMPOSED-BARREL" "Uses barrel import @/components/composed" '@/components/composed' "$TARGET"
+fi
+
+# FIELD-USE: Forms use Field component (not bare inputs)
+HAS_FORM=$(grep -rn '<form\|onSubmit' $TARGET 2>/dev/null | head -1)
+if [ -n "$HAS_FORM" ]; then
+  check_absent "FIELD-USE" "Uses Field component in form context" '<Field\|FieldLabel\|FieldGroup' "$TARGET"
+fi
+
+# PAGE-WRAPPER: Root wrapper uses flex flex-col gap-4 p-4
+check_absent "PAGE-WRAPPER" "Uses standard page wrapper (flex flex-col gap-4 p-4)" 'flex flex-col gap-4 p-4\|flex flex-col gap-4.*p-4' "$TARGET"
 
 if [ "$FORMAT" != "jsonl" ]; then
   echo ""

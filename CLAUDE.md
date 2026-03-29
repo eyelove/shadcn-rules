@@ -54,3 +54,11 @@ Follow these rules for every file you touch.
   // WHY: Consistent number formatting across KPI cards and tables. Supports multi-locale (ko-KR, en-US).
 
 - **Rule files**: When in doubt about what is allowed, read the specific rule file. Do not infer — look it up.
+
+## Eval Preview 환경 주의사항
+
+- **Vite dep scan 실패 재발 방지**: without_rules arm이 `date-fns/locale` 같은 하위 경로를 import하면 Vite dependency scan이 실패한다. 새 패키지가 필요하면 반드시 두 곳을 동시에 수정:
+  1. `preview/vite.config.ts` → `optimizeDeps.include` 배열에 추가
+  2. `scripts/reset-preview.sh` → vite.config.ts 패치 코드의 `include` 배열에 동일하게 추가
+  - `--fresh` 모드로 재생성 시 reset-preview.sh만 반영되므로, 두 곳이 일치하지 않으면 재발한다.
+- **preview/vite.config.ts와 preview/src/App.tsx는 수정 금지**: eval 스크립트가 관리하는 파일이다. 수동 수정 시 `reset-preview.sh --fresh`로 덮어써진다.

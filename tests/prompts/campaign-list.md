@@ -23,62 +23,56 @@ expected_lib:
   - formatDate
 ---
 
-# 캠페인 관리 페이지 생성
+# 캠페인 관리
 
-캠페인 운영팀에서 전체 캠페인을 관리하는 페이지가 필요합니다.
+캠페인 운영팀에서 전체 캠페인을 관리하는 페이지입니다.
 운영팀은 하루에 수십 번 이 페이지를 방문하여 캠페인 상태를 확인하고, 성과가 낮은 캠페인을 일시정지하거나 예산을 조정합니다.
 필터링과 정렬이 빠르게 되어야 하고, 목록에서 바로 캠페인 활성/비활성 토글이 가능해야 합니다.
 
-## 요구사항
-
-### 페이지 헤더
+## 페이지 헤더
 - 제목: "캠페인 관리"
 - 설명: "전체 캠페인 목록을 관리합니다"
 - 우측에 "캠페인 생성" 버튼
 
-### 검색/필터 바 (SearchBar)
-Card 안, DataTable 위에 SearchBar 컴포넌트를 배치합니다.
-다음 필터를 config로 구성하세요:
+## 검색/필터
 
-| 필터 | 타입 | 설명 |
+테이블 위에 다음 필터를 배치합니다:
+
+| 필터 | 입력 방식 | 설명 |
+|------|----------|------|
+| 검색 | 텍스트 검색 | 캠페인명으로 검색 (placeholder: "캠페인 검색...") |
+| 채널 | 검색 가능한 선택 | Google Ads, Meta Ads, Naver SA, Kakao Moment, X Ads |
+| 기간 | 날짜 범위 선택 | 캠페인 운영 기간 필터 |
+| 상태 | 드롭다운 선택 | 전체, 활성, 일시정지, 종료 |
+
+## 캠페인 테이블
+
+"전체 캠페인" 제목, "총 50개 캠페인" 부제, 우측에 내보내기 버튼
+
+테이블 컬럼:
+
+| 순서 | 컬럼 | 설명 |
 |------|------|------|
-| 검색 | text | 캠페인명으로 검색 (placeholder: "캠페인 검색...") |
-| 채널 | combobox | Google Ads, Meta Ads, Naver SA, Kakao Moment, X Ads (placeholder: "채널 선택") |
-| 기간 | dateRange | 캠페인 운영 기간 필터 (placeholder: "기간 선택") |
-| 상태 | select | 전체, 활성, 일시정지, 종료 (placeholder: "상태") |
+| 1 | 선택 | 체크박스 (전체선택/개별선택) |
+| 2 | ID | 정렬 가능 |
+| 3 | 캠페인명 | 정렬 가능 |
+| 4 | 상태 | 라벨 표시 (활성/일시정지/종료), 정렬 가능 |
+| 5 | 채널 | 정렬 가능 |
+| 6 | 활성 | 켜기/끄기 토글 (캠페인 활성화/비활성화) |
+| 7 | 시작일 | YYYY-MM-DD 형식, 정렬 가능 |
+| 8 | 종료일 | YYYY-MM-DD 형식, 정렬 가능 |
+| 9 | 노출수 | 오른쪽 정렬, 천단위 구분자, 정렬 가능 |
+| 10 | 클릭수 | 오른쪽 정렬, 천단위 구분자, 정렬 가능 |
+| 11 | CTR | 오른쪽 정렬, 퍼센트 표시, 정렬 가능 |
+| 12 | 지출 | 오른쪽 정렬, 원화 표기, 천단위 구분자, 굵은 글씨, 정렬 가능 |
+| 13 | 액션 | 더보기 메뉴: 수정, 복제, 삭제(빨간색) |
 
-### DataTable
-- CardHeader: "전체 캠페인" + CardDescription "총 142개 캠페인" + Export 버튼 (CardAction, variant="outline", size="sm")
+- 한 페이지에 20행 표시
+- 50행 목 데이터 (다양한 상태와 채널을 골고루 혼합, 페이지네이션 테스트 가능하도록)
+- 행 클릭 시 /campaigns/{id}로 이동
+- 선택된 행 추적 가능
 
-#### 컬럼 구성
-| 순서 | 컬럼 | 설정 |
-|------|------|------|
-| 1 | 선택 (Checkbox) | pinned left, 전체선택/해제 |
-| 2 | ID | pinned left, sortable |
-| 3 | 캠페인명 | pinned left, sortable |
-| 4 | 상태 | sortable, Badge variant="outline" |
-| 5 | 채널 | sortable |
-| 6 | 활성 | Switch 토글 (on/off로 캠페인 활성화/비활성화) |
-| 7 | 시작일 | sortable, formatDate |
-| 8 | 종료일 | sortable, formatDate |
-| 9 | 노출수 | sortable, right-aligned, tabular-nums, formatNumber |
-| 10 | 클릭수 | sortable, right-aligned, tabular-nums, formatNumber |
-| 11 | CTR | sortable, right-aligned, tabular-nums, formatPercent |
-| 12 | 지출 | sortable, right-aligned, tabular-nums, font-medium, formatCurrency |
-| 13 | 액션 | DropdownMenu: 수정, 복제, 삭제(text-destructive) |
-
-- pageSize: 20
-- 20행 목 데이터 (다양한 상태와 채널 혼합)
-- onRowClick으로 `/campaigns/${row.id}` 이동
-- onSelectionChange로 선택된 캠페인 추적
-
-### 기타
-- 로케일: ko-KR, 통화: KRW
-- 날짜 포맷: formatDate 사용 (date-fns 직접 사용 금지)
-- 모든 숫자는 format 유틸리티 사용
-
-## 출력
-- Composed 컴포넌트(DataTable, SearchBar)가 없으면 `preview/src/components/composed/`에 생성하세요
-- `@/lib/format` 유틸리티가 없으면 `preview/src/lib/format.ts`에 생성하세요
-- App.tsx에 라우팅을 연결하세요
+## 기타
+- 한국어 UI, 원화 표기
+- 모든 숫자에 천단위 구분자
 - 단일 페이지 컴포넌트, 목 데이터 인라인

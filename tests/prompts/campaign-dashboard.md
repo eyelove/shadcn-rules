@@ -19,66 +19,50 @@ expected_lib:
   - formatPercent
 ---
 
-# 캠페인 대시보드 페이지 생성
+# 캠페인 대시보드
 
-광고 운영팀이 매일 아침 전체 캠페인 성과를 한눈에 확인하는 대시보드가 필요합니다.
-팀장이 주간 회의에서 이 화면을 프로젝터로 띄워 현황을 공유하므로, KPI 수치가 크고 명확하게 보여야 합니다.
+광고 운영팀이 매일 아침 전체 캠페인 성과를 확인하는 화면입니다.
+팀장이 주간 회의에서 프로젝터로 띄워 현황을 공유하므로, 핵심 수치가 크고 명확하게 보여야 합니다.
 
-## 요구사항
+## 상단 지표 요약 (4개)
 
-### 페이지 헤더
-- 제목: "캠페인 대시보드"
-- 설명: "전체 캠페인 성과 현황"
-- 우측에 "캠페인 생성" 버튼
-
-### KPI 카드 (4개, 4-column grid)
-아래 지표를 KpiCard 컴포넌트로 표시합니다. 값은 compact 포맷(만/억 단위)으로 표시하세요.
-
-| 지표 | 값 (원본) | delta |
-|------|----------|-------|
+| 지표 | 값 | 전주 대비 |
+|------|-----|----------|
 | 총 지출 | 245,800,000원 | +12.5% |
 | 노출수 | 18,420,000 | +8.3% |
 | 클릭수 | 892,000 | -2.1% |
 | 평균 CTR | 4.84% | +0.5% |
 
-- 총 지출과 클릭수는 통화/수량 compact(formatCurrencyCompact, formatCompact)
-- CTR은 formatPercent
-- delta는 formatDelta
+- 큰 숫자는 만/억 단위로 축약 표시 (예: 2.4억원, 1,842만)
+- 증감률은 양수면 초록, 음수면 빨강
+- 숫자는 크고 굵은 글씨, 지표명은 작은 보조 글씨
 
-### 차트 (2개, 2-column grid)
+## 차트 (2개, 나란히 배치)
 
-#### 일일 지출 추이 (LineChart)
-- 최근 30일 데이터 (목 데이터 30건)
+### 일일 지출 추이
+- 최근 30일 선 그래프
 - X축: 날짜, Y축: 지출(원)
-- CardAction에 기간 Select: "최근 7일", "최근 30일", "최근 90일"
-- chartConfig에서 색상 정의, `var(--color-KEY)` 참조
-- ChartTooltip + ChartTooltipContent 사용
+- 기간 변경 가능: 7일 / 30일 / 90일
+- 마우스 호버 시 툴팁에 해당 날짜의 지출 표시
+- 목 데이터 30건
 
-#### 채널별 지출 비율 (BarChart)
-- 채널: Google Ads, Meta Ads, Naver SA, Kakao Moment, X Ads
-- 각 채널별 지출 금액
-- chartConfig에서 chart-1~5 토큰 색상 사용
+### 채널별 지출
+- Google Ads, Meta Ads, Naver SA, Kakao Moment, X Ads
+- 막대 그래프, 각 채널 다른 색상
+- 마우스 호버 시 금액 툴팁
 
-### 최근 캠페인 테이블
-- CardHeader: "최근 캠페인" + CardDescription "최근 활동이 있는 캠페인"
-- DataTable 컬럼:
-  - ID (pinned left, sortable)
-  - 캠페인명 (pinned left, sortable)
-  - 상태 (Badge variant="outline")
-  - 채널
-  - 노출수 (right-aligned, formatNumber)
-  - 클릭수 (right-aligned, formatNumber)
-  - CTR (right-aligned, formatPercent)
-  - 지출 (right-aligned, formatCurrency)
-- 10행 목 데이터
-- onRowClick으로 `/campaigns/${row.id}` 이동
+## 최근 캠페인 목록
 
-### 기타
-- 로케일: ko-KR, 통화: KRW
-- 모든 숫자는 format 유틸리티 사용 (inline 포맷팅 금지)
+"최근 캠페인" 제목, "최근 활동이 있는 캠페인" 부제
 
-## 출력
-- Composed 컴포넌트(DataTable, KpiCard)가 없으면 `preview/src/components/composed/`에 생성하세요
-- `@/lib/format` 유틸리티가 없으면 `preview/src/lib/format.ts`에 생성하세요
-- App.tsx에 라우팅을 연결하세요
+- 컬럼: ID, 캠페인명, 상태, 채널, 노출수, 클릭수, CTR, 지출
+- 금액/수치 컬럼은 오른쪽 정렬, 천단위 구분자
+- 금액순 정렬 가능
+- 상태는 라벨 표시 (활성 / 일시정지 / 종료)
+- 행 클릭 시 /campaigns/{id}로 이동
+- 50행 목 데이터 (다양한 상태와 채널 혼합, 페이지네이션 테스트 가능하도록)
+
+## 기타
+- 한국어 UI, 원화 표기 (원 접미사, ₩ 사용 금지)
+- 모든 숫자에 천단위 구분자
 - 단일 페이지 컴포넌트, 목 데이터 인라인

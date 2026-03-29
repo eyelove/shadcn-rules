@@ -56,7 +56,7 @@ if [ ! -f "${PREVIEW_DIR}/package.json" ]; then
 
   # Install shadcn components used in eval
   echo "Installing shadcn components..."
-  npx shadcn@latest add card badge input textarea select field chart separator popover calendar switch radio-group combobox table tabs dropdown-menu dialog alert-dialog toggle-group --yes 2>&1
+  npx shadcn@latest add card badge button checkbox input textarea select field chart separator popover calendar switch radio-group combobox table tabs dropdown-menu dialog alert-dialog toggle-group --yes 2>&1
   echo "  ✓ shadcn components installed"
 
   # Install runtime dependencies used by eval-generated pages and composed components.
@@ -80,7 +80,7 @@ p = pathlib.Path('${PREVIEW_DIR}/vite.config.ts')
 code = p.read_text()
 patch = '''  optimizeDeps: {
     entries: [\"src/**/*.{ts,tsx}\", \"!src/App.viewer.tsx\"],
-    include: [\"react-hook-form\", \"lucide-react\", \"recharts\", \"@tanstack/react-table\", \"react-day-picker\"],
+    include: [\"react-hook-form\", \"lucide-react\", \"recharts\", \"@tanstack/react-table\", \"react-day-picker\", \"date-fns\", \"date-fns/locale\"],
   },'''
 code = code.replace(
     'plugins: [react(), tailwindcss()],',
