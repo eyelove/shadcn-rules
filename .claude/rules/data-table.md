@@ -89,10 +89,21 @@ interface DataTableProps<T> {
 
 | Feature | Location | Description |
 |---------|----------|-------------|
-| Sorting | Header click | `sortable: true` columns; sort icon in header; asc -> desc -> none cycle |
+| Sorting | Header click | `sortable: true` columns; sort icon always visible (`ArrowUpDown`); active sort shows `ArrowUp`/`ArrowDown`; asc -> desc -> none cycle |
 | Column pinning | `pinned: "left"` | Checkbox + ID + Title pinned, sticky on horizontal scroll |
-| Pagination | DataTable bottom | `pageSize`-based; prev/next + page numbers |
+| Pagination | DataTable bottom | `pageSize`-based; prev/next + page info ("Page 1 of 8") |
 | Row selection | Checkbox column | Select all / individual; `onSelectionChange` callback |
+| Header styling | `TableHeader` | `bg-muted` background on header row for visual emphasis |
+| Cell Switch | cell function | Toggle switch in table cell for on/off state (e.g., campaign active/pause) |
+
+**Header styling rules:**
+- `TableHeader` 내부 `TableRow`에 `bg-muted` 적용 — 헤더와 본문의 시각적 구분
+- 정렬 가능 컬럼(`sortable: true`)에는 `ArrowUpDown` 아이콘이 항상 표시됨
+- 활성 정렬 시 `ArrowUp`(asc) 또는 `ArrowDown`(desc)으로 전환
+- 아이콘은 `lucide-react`에서 import: `ArrowUpDown`, `ArrowUp`, `ArrowDown`
+
+// WHY: 헤더 배경색이 없으면 데이터 행과 구분이 약하다. 정렬 아이콘이 hover에서만 보이면
+// 사용자가 정렬 가능 여부를 알 수 없다. 항상 표시하여 어포던스를 제공한다.
 
 ## TABLE-04 — Card Combination
 
@@ -109,6 +120,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { Switch } from "@/components/ui/switch"
 import { formatNumber, formatCurrency, formatPercent } from "@/lib/format"
 
 // Column definitions for Campaign table
@@ -238,7 +250,22 @@ const columns: DataTableColumn<Campaign>[] = [
     ),
   },
 
-  // 12. Actions — last column, no sorting, dropdown menu
+  // 12. Active toggle — Switch in cell
+  {
+    accessorKey: "isActive",
+    header: "활성",
+    align: "center",
+    enableSorting: false,
+    cell: (row) => (
+      <Switch
+        checked={row.isActive}
+        onCheckedChange={(checked) => handleToggleActive(row.id, checked)}
+        aria-label={`Toggle ${row.name}`}
+      />
+    ),
+  },
+
+  // 13. Actions — last column, no sorting, dropdown menu
   {
     id: "actions",
     header: "",
