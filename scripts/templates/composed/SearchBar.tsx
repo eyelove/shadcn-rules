@@ -106,15 +106,17 @@ export function SearchBar({ filters, onSearch }: SearchBarProps) {
             return (
               <Combobox
                 key={filter.name}
-                items={filter.items}
                 value={values[filter.name] as string | undefined}
                 onValueChange={(v) => updateValue(filter.name, v)}
-                itemToStringValue={(item) => item.label}
               >
                 <ComboboxInput placeholder={filter.placeholder} />
                 <ComboboxContent>
                   <ComboboxList>
-                    {(item) => <ComboboxItem>{item.label}</ComboboxItem>}
+                    {filter.items.map((item) => (
+                      <ComboboxItem key={item.value} value={item.value}>
+                        {item.label}
+                      </ComboboxItem>
+                    ))}
                   </ComboboxList>
                   <ComboboxEmpty>검색 결과가 없습니다.</ComboboxEmpty>
                 </ComboboxContent>

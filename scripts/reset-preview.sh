@@ -26,7 +26,15 @@ echo "Resetting preview..."
 # ── Fresh mode: delete entire preview/ to force full scaffold ──
 if [ "$FRESH" = true ] && [ -d "${PREVIEW_DIR}" ]; then
   echo "  --fresh: removing preview/ entirely..."
+  # Kill any running Vite dev server — it watches preview/ and recreates
+  # .vite/ cache after rm, causing "dest already exists" on shadcn init.
+  pkill -f "preview/node_modules.*vite" 2>/dev/null || true
+  sleep 1
   rm -rf "${PREVIEW_DIR}"
+  if [ -d "${PREVIEW_DIR}" ]; then
+    echo "ERROR: Failed to remove preview/ — check for running processes"
+    exit 1
+  fi
   echo "  ✓ preview/ removed"
 fi
 
@@ -48,7 +56,7 @@ if [ ! -f "${PREVIEW_DIR}/package.json" ]; then
 
   # Install shadcn components used in eval
   echo "Installing shadcn components..."
-  npx shadcn@latest add card badge input textarea select field chart separator popover calendar switch radio-group combobox --yes 2>&1
+  npx shadcn@latest add card badge input textarea select field chart separator popover calendar switch radio-group combobox table tabs dropdown-menu dialog alert-dialog toggle-group --yes 2>&1
   echo "  ✓ shadcn components installed"
 
   # Install runtime dependencies used by eval-generated pages and composed components.
@@ -63,14 +71,23 @@ if [ ! -f "${PREVIEW_DIR}/package.json" ]; then
   # App.viewer.tsx uses import.meta.glob to load snapshot pages outside preview/.
   # Problem: Vite's dep scanner follows those imports into tests/snapshots/ and fails
   # because node_modules is in preview/, not in the snapshot directory.
-  # Fix: entries limits the scan to preview/src only, include forces pre-bundling
-  # of packages that snapshot files import (resolved from preview/node_modules).
+  # Fix: entries excludes App.viewer.tsx so Vite never follows the snapshot glob.
+  # include forces pre-bundling of runtime packages used by AI-generated pages.
   if [ -f "${PREVIEW_DIR}/vite.config.ts" ]; then
-    sed -i '' 's/plugins: \[react(), tailwindcss()\],/plugins: [react(), tailwindcss()],\
-  optimizeDeps: {\
-    entries: ["src\/main.tsx"],\
-    include: ["react-hook-form", "lucide-react", "recharts", "@tanstack\/react-table"],\
-  },/' "${PREVIEW_DIR}/vite.config.ts"
+    python3 -c "
+import pathlib, re
+p = pathlib.Path('${PREVIEW_DIR}/vite.config.ts')
+code = p.read_text()
+patch = '''  optimizeDeps: {
+    entries: [\"src/**/*.{ts,tsx}\", \"!src/App.viewer.tsx\"],
+    include: [\"react-hook-form\", \"lucide-react\", \"recharts\", \"@tanstack/react-table\", \"react-day-picker\"],
+  },'''
+code = code.replace(
+    'plugins: [react(), tailwindcss()],',
+    'plugins: [react(), tailwindcss()],\n' + patch
+)
+p.write_text(code)
+"
     echo "  ✓ vite.config.ts patched (optimizeDeps)"
   fi
 
