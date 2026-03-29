@@ -72,6 +72,27 @@ Usage (Card > CardContent, above DataTable):
 <DataTable columns={columns} data={filteredRows} />
 ```
 
+## Primitive Sources — PRIM-01
+
+`shadcn init --preset nova`는 Radix + Base UI 하이브리드. 컴포넌트별 primitive 소스가 다르므로 controlled state API가 다르다.
+
+| Component | Primitive | "미선택" 값 | onValueChange 시그니처 |
+|-----------|-----------|-----------|----------------------|
+| **Select** | `radix-ui` | `undefined` | `(value: string) => void` |
+| **Combobox** | `@base-ui/react` | `null` | `(value: string \| null, eventDetails) => void` |
+| **Popover, Dialog, Checkbox, Switch, RadioGroup** | `radix-ui` | — | — |
+| **Calendar** | `react-day-picker` | — | — |
+
+```tsx
+// Select (Radix) — undefined이 placeholder 트리거
+<Select value={selected ?? undefined} onValueChange={setSelected}>
+
+// Combobox (Base UI) — null이 미선택 상태
+<Combobox value={selected ?? null} onValueChange={(v) => setSelected(v)}>
+```
+
+**금지:** Select에 `value=""` (placeholder 미표시), Combobox에 `value={undefined}` (uncontrolled로 전환)
+
 ## Input Component Selection — SELECT-01
 | 기준 | Select | Combobox |
 |------|--------|----------|

@@ -58,11 +58,19 @@ interface SearchBarProps {
 
 export function SearchBar({ filters, onSearch }: SearchBarProps) {
   const [values, setValues] = React.useState<Record<string, unknown>>({})
+  const debounceRef = React.useRef<ReturnType<typeof setTimeout>>(null)
 
   const updateValue = (name: string, value: unknown) => {
     const next = { ...values, [name]: value }
     setValues(next)
     onSearch(next)
+  }
+
+  const updateValueDebounced = (name: string, value: unknown) => {
+    const next = { ...values, [name]: value }
+    setValues(next)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => onSearch(next), 300)
   }
 
   return (
@@ -76,7 +84,9 @@ export function SearchBar({ filters, onSearch }: SearchBarProps) {
                 <Input
                   placeholder={filter.placeholder}
                   value={(values[filter.name] as string) ?? ""}
-                  onChange={(e) => updateValue(filter.name, e.target.value)}
+                  onChange={(e) =>
+                    updateValueDebounced(filter.name, e.target.value)
+                  }
                   className="pl-8"
                 />
               </div>
@@ -86,7 +96,7 @@ export function SearchBar({ filters, onSearch }: SearchBarProps) {
             return (
               <Select
                 key={filter.name}
-                value={(values[filter.name] as string) ?? ""}
+                value={(values[filter.name] as string) ?? undefined}
                 onValueChange={(v) => updateValue(filter.name, v)}
               >
                 <SelectTrigger className="w-[180px]">
@@ -106,7 +116,7 @@ export function SearchBar({ filters, onSearch }: SearchBarProps) {
             return (
               <Combobox
                 key={filter.name}
-                value={values[filter.name] as string | undefined}
+                value={(values[filter.name] as string) ?? null}
                 onValueChange={(v) => updateValue(filter.name, v)}
               >
                 <ComboboxInput placeholder={filter.placeholder} />
