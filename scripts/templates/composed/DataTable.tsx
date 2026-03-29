@@ -1,4 +1,5 @@
 import * as React from "react"
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import {
   useReactTable,
   getCoreRowModel,
@@ -80,7 +81,7 @@ export function DataTable<T extends Record<string, any>>({
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
+            <TableRow key={headerGroup.id} className="bg-muted">
               {headerGroup.headers.map((header) => (
                 <TableHead
                   key={header.id}
@@ -89,13 +90,28 @@ export function DataTable<T extends Record<string, any>>({
                       ? "text-right"
                       : undefined
                   }
-                  onClick={header.column.getCanSort() ? header.column.getToggleSortingHandler() : undefined}
                 >
                   {header.isPlaceholder
                     ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
-                  {header.column.getIsSorted() === "asc" && " \u2191"}
-                  {header.column.getIsSorted() === "desc" && " \u2193"}
+                    : (
+                      <div
+                        className={
+                          header.column.getCanSort()
+                            ? "flex items-center gap-1 cursor-pointer select-none"
+                            : undefined
+                        }
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.column.getCanSort() && (
+                          header.column.getIsSorted() === "asc"
+                            ? <ArrowUp className="size-4" />
+                            : header.column.getIsSorted() === "desc"
+                              ? <ArrowDown className="size-4" />
+                              : <ArrowUpDown className="size-4 text-muted-foreground" />
+                        )}
+                      </div>
+                    )}
                 </TableHead>
               ))}
             </TableRow>
