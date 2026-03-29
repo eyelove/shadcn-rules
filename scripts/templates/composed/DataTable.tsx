@@ -59,7 +59,7 @@ export function DataTable<T extends Record<string, any>>({
         cell: col.cell
           ? ({ row }: any) => col.cell!(row.original)
           : undefined,
-        enableSorting: col.enableSorting !== false && col.sortable !== false,
+        enableSorting: col.enableSorting ?? col.sortable ?? false,
         meta: { align: col.align },
       })),
     [columns]
@@ -88,7 +88,9 @@ export function DataTable<T extends Record<string, any>>({
                   className={
                     (header.column.columnDef.meta as any)?.align === "right"
                       ? "text-right"
-                      : undefined
+                      : (header.column.columnDef.meta as any)?.align === "center"
+                        ? "text-center"
+                        : undefined
                   }
                 >
                   {header.isPlaceholder
@@ -137,7 +139,9 @@ export function DataTable<T extends Record<string, any>>({
                     className={
                       (cell.column.columnDef.meta as any)?.align === "right"
                         ? "text-right"
-                        : undefined
+                        : (cell.column.columnDef.meta as any)?.align === "center"
+                          ? "text-center"
+                          : undefined
                     }
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

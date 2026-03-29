@@ -111,8 +111,49 @@ The same multi-component arrangement appears 3+ times across pages with identica
 For detailed Props contracts and usage examples, see:
 - @.claude/rules/data-table.md — DataTable columns, actions, render functions
 - @.claude/rules/cards.md — KpiCard props, delta formatting, grid layout
-- @.claude/rules/cards.md — SearchBar usage in CARD-03b filter toolbar
 - @.claude/rules/fields.md — form field patterns with shadcn primitives
+
+### SearchBar Props Interface
+
+SearchBar는 config-driven 필터 바다. `filters` 배열로 필터 종류를 정의하고, 값이 변경될 때마다 `onSearch`를 호출한다.
+
+```tsx
+interface SearchBarProps {
+  filters: SearchBarFilter[]
+  onSearch: (values: Record<string, unknown>) => void
+}
+
+type SearchBarFilter = TextFilter | SelectFilter | ComboboxFilter | DateRangeFilter
+
+// text — 텍스트 검색
+{ type: "text", name: "search", placeholder: "캠페인 검색..." }
+
+// select — 고정 옵션 드롭다운
+{ type: "select", name: "status", placeholder: "상태", options: [{ value: "active", label: "활성" }] }
+
+// combobox — 검색 가능한 옵션 목록
+{ type: "combobox", name: "channel", placeholder: "채널 선택", items: [{ value: "google", label: "Google Ads" }] }
+
+// dateRange — 기간 선택 (Popover + Calendar range)
+{ type: "dateRange", name: "period", placeholder: "기간 선택" }
+```
+
+**Usage example (inside Card > CardContent, above DataTable):**
+```tsx
+<SearchBar
+  filters={[
+    { type: "text", name: "search", placeholder: "캠페인 검색..." },
+    { type: "combobox", name: "channel", placeholder: "채널 선택", items: channels },
+    { type: "dateRange", name: "period", placeholder: "기간 선택" },
+    { type: "select", name: "status", placeholder: "상태", options: statusOptions },
+  ]}
+  onSearch={handleSearch}
+/>
+<DataTable columns={columns} data={filteredRows} />
+```
+
+// WHY: SearchBar는 DataTable 위에 배치되는 필터 바를 config로 정의한다.
+// 동일한 필터 패턴이 여러 목록 페이지에서 반복되므로 Composed 자격을 충족한다.
 
 ## Input Component Selection
 
