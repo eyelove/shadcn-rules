@@ -45,11 +45,12 @@ Card 래핑(CardHeader → CardContent → CardFooter)은 @.claude/rules/cards.m
 폼 패턴에서 공통으로 사용하는 import. 각 FIELD 예제에서는 해당 패턴 고유 import만 표시한다.
 
 ```tsx
-import { Field, FieldLabel, FieldGroup, FieldSet, FieldLegend, FieldSeparator, FieldDescription, FieldError, FieldContent } from "@/components/ui/field"
+import { Field, FieldLabel, FieldGroup, FieldSet, FieldLegend, FieldSeparator, FieldDescription, FieldError, FieldContent, FieldTitle } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 ```
 
 ---
@@ -329,6 +330,88 @@ useEffect(() => {
 
 // WHY: Select는 검색 기능이 없어 옵션이 많으면 사용 불가능하다.
 // Combobox는 타이핑 즉시 필터링하므로 대량 목록에서도 빠르게 찾을 수 있다.
+
+## FIELD-08 — RadioGroup
+
+수직 라디오 버튼. 옵션이 2~5개이고 상호 배타적 선택일 때 사용한다.
+옵션이 1개면 Checkbox, 6개 이상이면 Select 또는 Combobox를 사용한다.
+
+고유 import: `RadioGroup, RadioGroupItem` from `@/components/ui/radio-group`
+
+```tsx
+<Field>
+  <FieldLabel>캠페인 목표</FieldLabel>
+  <RadioGroup defaultValue="awareness" onValueChange={setGoal}>
+    <div className="flex items-center gap-2">
+      <RadioGroupItem value="awareness" id="goal-awareness" />
+      <FieldLabel htmlFor="goal-awareness" className="font-normal">브랜드 인지도</FieldLabel>
+    </div>
+    <div className="flex items-center gap-2">
+      <RadioGroupItem value="conversion" id="goal-conversion" />
+      <FieldLabel htmlFor="goal-conversion" className="font-normal">전환</FieldLabel>
+    </div>
+    <div className="flex items-center gap-2">
+      <RadioGroupItem value="traffic" id="goal-traffic" />
+      <FieldLabel htmlFor="goal-traffic" className="font-normal">트래픽</FieldLabel>
+    </div>
+  </RadioGroup>
+  <FieldDescription>캠페인의 주요 목표를 선택하세요.</FieldDescription>
+</Field>
+```
+
+// WHY: RadioGroup은 시각적으로 모든 옵션을 한눈에 보여준다. Select는 드롭다운을 열어야 하므로
+// 옵션이 적을 때는 RadioGroup이 더 빠른 인터랙션을 제공한다.
+
+## FIELD-09 — Choice Card (RadioGroup + Field)
+
+RadioGroup 아이템을 카드 형태로 표시. 각 옵션에 제목과 설명이 필요할 때 사용한다.
+shadcn 공식 패턴: `FieldLabel > Field orientation="horizontal" > FieldContent(FieldTitle + FieldDescription) + RadioGroupItem`.
+
+고유 import: `RadioGroup, RadioGroupItem` from `@/components/ui/radio-group`
+
+```tsx
+<Field>
+  <FieldLabel>요금제</FieldLabel>
+  <RadioGroup defaultValue="standard" onValueChange={setPlan}>
+    <FieldLabel htmlFor="plan-standard">
+      <Field orientation="horizontal">
+        <FieldContent>
+          <FieldTitle>스탠다드</FieldTitle>
+          <FieldDescription>소규모 팀에 적합합니다.</FieldDescription>
+        </FieldContent>
+        <RadioGroupItem value="standard" id="plan-standard" />
+      </Field>
+    </FieldLabel>
+    <FieldLabel htmlFor="plan-professional">
+      <Field orientation="horizontal">
+        <FieldContent>
+          <FieldTitle>프로페셔널</FieldTitle>
+          <FieldDescription>성장하는 비즈니스를 위한 플랜입니다.</FieldDescription>
+        </FieldContent>
+        <RadioGroupItem value="professional" id="plan-professional" />
+      </Field>
+    </FieldLabel>
+    <FieldLabel htmlFor="plan-enterprise">
+      <Field orientation="horizontal">
+        <FieldContent>
+          <FieldTitle>엔터프라이즈</FieldTitle>
+          <FieldDescription>대규모 팀과 기업을 위한 플랜입니다.</FieldDescription>
+        </FieldContent>
+        <RadioGroupItem value="enterprise" id="plan-enterprise" />
+      </Field>
+    </FieldLabel>
+  </RadioGroup>
+</Field>
+```
+
+**Rules:**
+- 외부 `Field > FieldLabel`로 전체 그룹의 레이블 제공
+- 각 아이템은 `FieldLabel(htmlFor) > Field(orientation="horizontal") > FieldContent + RadioGroupItem`
+- FieldContent 안에 `FieldTitle`과 `FieldDescription`으로 카드 내용 구성
+- RadioGroupItem이 FieldContent 뒤에 위치 (우측 정렬)
+
+// WHY: Choice Card는 각 옵션의 의미를 설명해야 할 때 사용한다. 단순 라벨만으로 충분하면 FIELD-08을 쓴다.
+// shadcn 공식 패턴을 그대로 따르므로 접근성과 키보드 네비게이션이 보장된다.
 
 ---
 

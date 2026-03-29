@@ -44,6 +44,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { Combobox, ComboboxInput, ComboboxContent, ComboboxList, ComboboxItem, ComboboxEmpty } from "@/components/ui/combobox"
 import { Switch } from "@/components/ui/switch"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 ```
 
 // WHY: shadcn components are well-documented, tree-shakeable, and accessible by default.
@@ -110,6 +111,7 @@ The same multi-component arrangement appears 3+ times across pages with identica
 For detailed Props contracts and usage examples, see:
 - @.claude/rules/data-table.md — DataTable columns, actions, render functions
 - @.claude/rules/cards.md — KpiCard props, delta formatting, grid layout
+- @.claude/rules/cards.md — SearchBar usage in CARD-03b filter toolbar
 - @.claude/rules/fields.md — form field patterns with shadcn primitives
 
 ## Input Component Selection
@@ -159,6 +161,27 @@ For detailed Props contracts and usage examples, see:
 
 폼 필드에서의 Date Picker, Combobox 코드 패턴: @.claude/rules/fields.md FIELD-06, FIELD-07
 차트 필터에서의 Date Range Picker 패턴: @.claude/rules/cards.md CARD-02
+
+### RADIO-01 — RadioGroup vs Select vs Choice Card
+
+```
+옵션이 2~5개이고 상호 배타적?
+  ├─ 라벨만으로 충분? → RadioGroup (FIELD-08)
+  └─ 각 옵션에 제목+설명 필요? → Choice Card (FIELD-09)
+
+옵션이 ~10개 이하, 고정? → Select
+옵션이 10개 이상? → Combobox
+```
+
+| 기준 | RadioGroup | Choice Card | Select |
+|------|-----------|-------------|--------|
+| 옵션 수 | 2~5개 | 2~5개 | ~10개 이하 |
+| 옵션 설명 | 불필요 | 제목+설명 필요 | 불필요 |
+| 시각적 크기 | 컴팩트 | 카드 크기 | 드롭다운 |
+| 대시보드 사용처 | 캠페인 목표, 입찰 전략 | 요금제, 캠페인 유형 | 상태, 지역, 기간 |
+
+// WHY: 옵션이 적고 한눈에 보여야 하면 RadioGroup. 설명이 필요하면 Choice Card.
+// 옵션이 많아지면 화면을 차지하므로 Select/Combobox로 전환한다.
 
 ## Cell Functions in DataTable
 
