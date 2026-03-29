@@ -48,7 +48,7 @@ if [ ! -f "${PREVIEW_DIR}/package.json" ]; then
 
   # Install shadcn components used in eval
   echo "Installing shadcn components..."
-  npx shadcn@latest add card badge input textarea select field chart separator popover calendar switch --yes 2>&1
+  npx shadcn@latest add card badge input textarea select field chart separator popover calendar switch radio-group combobox --yes 2>&1
   echo "  ✓ shadcn components installed"
 
   # Install runtime dependencies used by eval-generated pages and composed components.
